@@ -22,6 +22,7 @@ export default function SpritePlayer() {
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [appendEmptyFrame, setAppendEmptyFrame] = useState(false);
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
   const fileInputRef = useRef(null);
@@ -137,19 +138,33 @@ export default function SpritePlayer() {
     setIsPaused(false);
   }, [imageSrc, naturalSize, framesInput, orientation]);
 
+  const playbackFrameCount = config
+    ? config.frames + (appendEmptyFrame ? 1 : 0)
+    : 0;
+
+  const isEmptyFrame =
+    Boolean(config) && appendEmptyFrame && frameIndex >= config.frames;
+
   const goPrevFrame = useCallback(() => {
-    setFrameIndex((i) => {
-      if (!config) return i;
-      return (i - 1 + config.frames) % config.frames;
-    });
-  }, [config]);
+    if (!config || playbackFrameCount === 0) return;
+    setFrameIndex((i) => (i - 1 + playbackFrameCount) % playbackFrameCount);
+  }, [config, playbackFrameCount]);
 
   const goNextFrame = useCallback(() => {
-    setFrameIndex((i) => {
-      if (!config) return i;
-      return (i + 1) % config.frames;
-    });
-  }, [config]);
+    if (!config || playbackFrameCount === 0) return;
+    setFrameIndex((i) => (i + 1) % playbackFrameCount);
+  }, [config, playbackFrameCount]);
+
+  const handleAppendEmptyFrameChange = useCallback(
+    (e) => {
+      const checked = e.target.checked;
+      setAppendEmptyFrame(checked);
+      if (!checked && config && frameIndex >= config.frames) {
+        setFrameIndex(config.frames - 1);
+      }
+    },
+    [config, frameIndex]
+  );
 
   const goToStart = useCallback(() => {
     setFrameIndex(0);
@@ -160,35 +175,42 @@ export default function SpritePlayer() {
   }, []);
 
   useEffect(() => {
-    if (!config || isPaused) return;
+    if (!config || isPaused || playbackFrameCount === 0) return;
 
     const intervalMs = 1000 / fps;
     const id = window.setInterval(() => {
-      setFrameIndex((i) => (i + 1) % config.frames);
+      setFrameIndex((i) => (i + 1) % playbackFrameCount);
     }, intervalMs);
 
     return () => window.clearInterval(id);
-  }, [fps, config, isPaused]);
+  }, [fps, config, isPaused, playbackFrameCount]);
 
   const backgroundPosition = useMemo(() => {
-    if (!config) return '0 0';
+    if (!config || isEmptyFrame) return '0 0';
     if (config.orientation === 'horizontal') {
       return `${-(frameIndex * config.frameW)}px 0`;
     }
     return `0 ${-(frameIndex * config.frameH)}px`;
-  }, [config, frameIndex]);
+  }, [config, frameIndex, isEmptyFrame]);
 
-  const previewStyle = useMemo(() => {
-    if (!imageSrc || !config) return undefined;
+  const frameBoxStyle = useMemo(() => {
+    if (!config) return undefined;
     return {
       width: `${config.frameW}px`,
       height: `${config.frameH}px`,
+    };
+  }, [config]);
+
+  const previewStyle = useMemo(() => {
+    if (!imageSrc || !config || isEmptyFrame) return undefined;
+    return {
+      ...frameBoxStyle,
       backgroundImage: `url(${imageSrc})`,
       backgroundSize: `${config.fullW}px ${config.fullH}px`,
       backgroundPosition,
       backgroundRepeat: 'no-repeat',
     };
-  }, [imageSrc, config, backgroundPosition]);
+  }, [imageSrc, config, isEmptyFrame, frameBoxStyle, backgroundPosition]);
 
   return (
     <div className="sprite-player" role="region" aria-label="Lecteur de sprite sheet">
@@ -318,6 +340,15 @@ export default function SpritePlayer() {
               <span>60</span>
             </div>
           </label>
+          <label className="sprite-player__checkbox">
+            <input
+              type="checkbox"
+              checked={appendEmptyFrame}
+              onChange={handleAppendEmptyFrameChange}
+              disabled={!config}
+            />
+            <span>Image vide en fin d&apos;animation</span>
+          </label>
         </section>
       </div>
 
@@ -325,8 +356,16 @@ export default function SpritePlayer() {
 
       <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
         <div className="sprite-player__preview">
-          {previewStyle ? (
-            <div className="sprite-player__sprite" style={previewStyle} />
+          {config && frameBoxStyle ? (
+            isEmptyFrame ? (
+              <div
+                className="sprite-player__sprite sprite-player__sprite--empty"
+                style={frameBoxStyle}
+                aria-label="Image vide"
+              />
+            ) : (
+              <div className="sprite-player__sprite" style={previewStyle} />
+            )
           ) : (
             <p className="sprite-player__placeholder">
               {imageSrc
@@ -338,7 +377,9 @@ export default function SpritePlayer() {
         {config && (
           <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
             <span className="sprite-player__frame-badge" aria-live="polite">
-              Image {frameIndex + 1} / {config.frames}
+              {isEmptyFrame
+                ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
+                : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
               {isPaused ? ' · en pause' : ''}
             </span>
             <div className="sprite-player__transport-btns">

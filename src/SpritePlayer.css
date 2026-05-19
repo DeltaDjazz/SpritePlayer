@@ -196,7 +196,36 @@
 }
 
 .sprite-player__field--slider {
-  margin-bottom: 0;
+  margin-bottom: 0.75rem;
+}
+
+.sprite-player__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sprite-player__checkbox input {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.sprite-player__checkbox input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sprite-player__checkbox:has(input:disabled) {
+  cursor: not-allowed;
+  color: var(--muted);
 }
 
 .sprite-player__label {
@@ -355,6 +384,10 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   /* Pas de transition : changement de frame instantané */
+}
+
+.sprite-player__sprite--empty {
+  background: none;
 }
 
 .sprite-player__placeholder {
