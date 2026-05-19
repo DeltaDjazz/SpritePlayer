@@ -1,5 +1,13 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import './SpritePlayer.css';
+
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+
+function isImageFile(file) {
+  if (!file) return false;
+  if (ACCEPTED_TYPES.includes(file.type)) return true;
+  return /\.(png|jpe?g)$/i.test(file.name);
+}
 
 /**
  * Lecteur de sprite sheet en boucle (style GIF), sans backend.
@@ -13,11 +21,16 @@ export default function SpritePlayer() {
   const [config, setConfig] = useState(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
+  const dragCounterRef = useRef(0);
+  const fileInputRef = useRef(null);
 
-  const handleFileChange = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const loadImageFile = useCallback((file) => {
+    if (!isImageFile(file)) {
+      setError('Format non pris en charge. Utilisez un PNG ou JPEG.');
+      return;
+    }
     setError('');
     setConfig(null);
     setFrameIndex(0);
@@ -33,6 +46,52 @@ export default function SpritePlayer() {
     };
     reader.readAsDataURL(file);
   }, []);
+
+  const handleFileChange = useCallback(
+    (e) => {
+      const file = e.target.files?.[0];
+      if (file) loadImageFile(file);
+      e.target.value = '';
+    },
+    [loadImageFile]
+  );
+
+  const handleDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragging(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file) loadImageFile(file);
+    },
+    [loadImageFile]
+  );
 
   const handleImageLoad = useCallback((e) => {
     const { naturalWidth, naturalHeight } = e.currentTarget;
@@ -143,15 +202,49 @@ export default function SpritePlayer() {
       <div className="sprite-player__grid">
         <section className="sprite-player__panel sprite-player__panel--import">
           <h2 className="sprite-player__panel-title">Image</h2>
-          <label className="sprite-player__file-label">
-            <span className="sprite-player__file-btn">Choisir un fichier</span>
+          <div
+            className={`sprite-player__dropzone${isDragging ? ' sprite-player__dropzone--active' : ''}${imageSrc ? ' sprite-player__dropzone--has-image' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            aria-label="Zone de dépôt : glissez une image PNG ou JPEG, ou appuyez pour parcourir"
+          >
+            <p className="sprite-player__dropzone-text">
+              {isDragging
+                ? 'Relâchez pour importer'
+                : 'Glissez une image ici'}
+            </p>
+            <p className="sprite-player__dropzone-hint">PNG ou JPEG</p>
+            <button
+              type="button"
+              className="sprite-player__file-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+            >
+              Parcourir…
+            </button>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/png,image/jpeg,.png,.jpg,.jpeg"
               className="sprite-player__file-input"
               onChange={handleFileChange}
+              tabIndex={-1}
+              aria-hidden
             />
-          </label>
+          </div>
           {naturalSize.w > 0 && (
             <p className="sprite-player__meta">
               {naturalSize.w} × {naturalSize.h} px
@@ -238,7 +331,7 @@ export default function SpritePlayer() {
             <p className="sprite-player__placeholder">
               {imageSrc
                 ? 'Configurez les frames puis cliquez sur « Valider & Lancer ».'
-                : 'Importez une image pour commencer.'}
+                : 'Glissez une image ou importez-la depuis le panneau Image.'}
             </p>
           )}
         </div>
