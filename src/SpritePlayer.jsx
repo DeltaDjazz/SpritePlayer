@@ -22,6 +22,42 @@ function detectOrientationFromSize(width, height) {
   return 'vertical';
 }
 
+function IconEyedropper() {
+  return (
+    <svg
+      className="sprite-player__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m17 3-1.5 1.5" />
+      <path d="M5 19l2-7.5L17 1.5l4.5 4.5L9.5 21z" />
+      <path d="M5 19 2 22" />
+    </svg>
+  );
+}
+
+function IconTransparent() {
+  return (
+    <svg className="sprite-player__icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="3" y="3" width="8" height="8" fill="currentColor" opacity="0.35" />
+      <rect x="13" y="3" width="8" height="8" fill="currentColor" opacity="0.55" />
+      <rect x="3" y="13" width="8" height="8" fill="currentColor" opacity="0.55" />
+      <rect x="13" y="13" width="8" height="8" fill="currentColor" opacity="0.35" />
+      <path
+        d="M4 4l16 16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /**
  * Lecteur de sprite sheet en boucle (style GIF), sans backend.
  */
@@ -36,6 +72,8 @@ export default function SpritePlayer() {
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [appendEmptyFrame, setAppendEmptyFrame] = useState(false);
+  const [emptyFrameUseBgColor, setEmptyFrameUseBgColor] = useState(false);
+  const [emptyFrameBgColor, setEmptyFrameBgColor] = useState('#000000');
   const [frameFpsOverrides, setFrameFpsOverrides] = useState({});
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
@@ -51,6 +89,8 @@ export default function SpritePlayer() {
     setFrameIndex(0);
     setIsPaused(false);
     setFrameFpsOverrides({});
+    setEmptyFrameUseBgColor(false);
+    setEmptyFrameBgColor('#000000');
     setNaturalSize({ w: 0, h: 0 });
 
     const reader = new FileReader();
@@ -281,6 +321,36 @@ export default function SpritePlayer() {
     };
   }, [config]);
 
+  const emptyFrameStyle = useMemo(() => {
+    if (!frameBoxStyle) return undefined;
+    if (!emptyFrameUseBgColor) return frameBoxStyle;
+    return {
+      ...frameBoxStyle,
+      backgroundColor: emptyFrameBgColor,
+    };
+  }, [frameBoxStyle, emptyFrameUseBgColor, emptyFrameBgColor]);
+
+  const handleEmptyFrameBgColorChange = useCallback((e) => {
+    setEmptyFrameBgColor(e.target.value);
+    setEmptyFrameUseBgColor(true);
+  }, []);
+
+  const handleEmptyFrameEyedropper = useCallback(async () => {
+    if (!window.EyeDropper) {
+      setError('La pipette n’est pas prise en charge par ce navigateur (Chrome ou Edge recommandé).');
+      return;
+    }
+    try {
+      const dropper = new window.EyeDropper();
+      const { sRGBHex } = await dropper.open();
+      setEmptyFrameBgColor(sRGBHex);
+      setEmptyFrameUseBgColor(true);
+      setError('');
+    } catch {
+      /* annulation par l’utilisateur */
+    }
+  }, []);
+
   const previewStyle = useMemo(() => {
     if (!imageSrc || !config || isEmptyFrame) return undefined;
     return {
@@ -429,6 +499,48 @@ export default function SpritePlayer() {
             />
             <span>Image vide en fin d&apos;animation</span>
           </label>
+          {appendEmptyFrame && (
+            <div className="sprite-player__empty-bg">
+              <label className="sprite-player__checkbox sprite-player__checkbox--nested">
+                <input
+                  type="checkbox"
+                  checked={emptyFrameUseBgColor}
+                  onChange={(e) => setEmptyFrameUseBgColor(e.target.checked)}
+                />
+                <span>Couleur de fond personnalisée</span>
+              </label>
+              <div className="sprite-player__color-row">
+              <input
+                type="color"
+                value={emptyFrameBgColor}
+                onChange={handleEmptyFrameBgColorChange}
+                className="sprite-player__color-input"
+                disabled={!emptyFrameUseBgColor}
+                aria-label="Couleur de fond de l’image vide"
+              />
+              <button
+                type="button"
+                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                onClick={handleEmptyFrameEyedropper}
+                disabled={!emptyFrameUseBgColor}
+                title="Pipette : prélever une couleur à l’écran"
+                aria-label="Pipette : prélever une couleur à l’écran"
+              >
+                <IconEyedropper />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                onClick={() => setEmptyFrameUseBgColor(false)}
+                disabled={!emptyFrameUseBgColor}
+                title="Fond transparent"
+                aria-label="Fond transparent"
+              >
+                <IconTransparent />
+              </button>
+            </div>
+            </div>
+          )}
         </section>
       </div>
 
@@ -440,7 +552,7 @@ export default function SpritePlayer() {
             isEmptyFrame ? (
               <div
                 className="sprite-player__sprite sprite-player__sprite--empty"
-                style={frameBoxStyle}
+                style={emptyFrameStyle}
                 aria-label="Image vide"
               />
             ) : (

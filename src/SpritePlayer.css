@@ -228,6 +228,69 @@
   color: var(--muted);
 }
 
+.sprite-player__checkbox--nested {
+  margin-top: 0.65rem;
+}
+
+.sprite-player__empty-bg {
+  margin-top: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.sprite-player__color-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.sprite-player__color-input {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.sprite-player__color-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sprite-player__color-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.sprite-player__color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.sprite-player__btn--icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.sprite-player__icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  display: block;
+}
+
 .sprite-player__label {
   font-size: 0.8rem;
   color: var(--muted);
@@ -251,7 +314,7 @@
 
 .sprite-player__btn {
   width: 100%;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 0rem;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 8px;
