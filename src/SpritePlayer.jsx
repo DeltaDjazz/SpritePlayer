@@ -2,11 +2,60 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import './SpritePlayer.css';
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+const FRAME_FPS_OVERRIDE_MIN = 1;
+const FRAME_FPS_OVERRIDE_MAX = 48;
 
 function isImageFile(file) {
   if (!file) return false;
   if (ACCEPTED_TYPES.includes(file.type)) return true;
   return /\.(png|jpe?g)$/i.test(file.name);
+}
+
+function getFrameLabel(index, config, hasEmptyTail) {
+  if (hasEmptyTail && index >= config.frames) return 'Image vide';
+  return `Image ${index + 1}`;
+}
+
+/** Orientation alignée sur le côté le plus long de l'image. */
+function detectOrientationFromSize(width, height) {
+  if (width > height) return 'horizontal';
+  return 'vertical';
+}
+
+function IconEyedropper() {
+  return (
+    <svg
+      className="sprite-player__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m17 3-1.5 1.5" />
+      <path d="M5 19l2-7.5L17 1.5l4.5 4.5L9.5 21z" />
+      <path d="M5 19 2 22" />
+    </svg>
+  );
+}
+
+function IconTransparent() {
+  return (
+    <svg className="sprite-player__icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="3" y="3" width="8" height="8" fill="currentColor" opacity="0.35" />
+      <rect x="13" y="3" width="8" height="8" fill="currentColor" opacity="0.55" />
+      <rect x="3" y="13" width="8" height="8" fill="currentColor" opacity="0.55" />
+      <rect x="13" y="13" width="8" height="8" fill="currentColor" opacity="0.35" />
+      <path
+        d="M4 4l16 16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
 /**
@@ -15,13 +64,17 @@ function isImageFile(file) {
 export default function SpritePlayer() {
   const [imageSrc, setImageSrc] = useState(null);
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
-  const [orientation, setOrientation] = useState('horizontal');
+  const [orientation, setOrientation] = useState('vertical');
   const [framesInput, setFramesInput] = useState('8');
   const [fps, setFps] = useState(12);
   const [config, setConfig] = useState(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [appendEmptyFrame, setAppendEmptyFrame] = useState(false);
+  const [emptyFrameUseBgColor, setEmptyFrameUseBgColor] = useState(false);
+  const [emptyFrameBgColor, setEmptyFrameBgColor] = useState('#000000');
+  const [frameFpsOverrides, setFrameFpsOverrides] = useState({});
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
   const fileInputRef = useRef(null);
@@ -35,6 +88,9 @@ export default function SpritePlayer() {
     setConfig(null);
     setFrameIndex(0);
     setIsPaused(false);
+    setFrameFpsOverrides({});
+    setEmptyFrameUseBgColor(false);
+    setEmptyFrameBgColor('#000000');
     setNaturalSize({ w: 0, h: 0 });
 
     const reader = new FileReader();
@@ -96,6 +152,7 @@ export default function SpritePlayer() {
   const handleImageLoad = useCallback((e) => {
     const { naturalWidth, naturalHeight } = e.currentTarget;
     setNaturalSize({ w: naturalWidth, h: naturalHeight });
+    setOrientation(detectOrientationFromSize(naturalWidth, naturalHeight));
   }, []);
 
   const handleValidate = useCallback(() => {
@@ -135,21 +192,43 @@ export default function SpritePlayer() {
     });
     setFrameIndex(0);
     setIsPaused(false);
+    setFrameFpsOverrides({});
   }, [imageSrc, naturalSize, framesInput, orientation]);
 
+  const playbackFrameCount = config
+    ? config.frames + (appendEmptyFrame ? 1 : 0)
+    : 0;
+
+  const isEmptyFrame =
+    Boolean(config) && appendEmptyFrame && frameIndex >= config.frames;
+
   const goPrevFrame = useCallback(() => {
-    setFrameIndex((i) => {
-      if (!config) return i;
-      return (i - 1 + config.frames) % config.frames;
-    });
-  }, [config]);
+    if (!config || playbackFrameCount === 0) return;
+    setFrameIndex((i) => (i - 1 + playbackFrameCount) % playbackFrameCount);
+  }, [config, playbackFrameCount]);
 
   const goNextFrame = useCallback(() => {
-    setFrameIndex((i) => {
-      if (!config) return i;
-      return (i + 1) % config.frames;
-    });
-  }, [config]);
+    if (!config || playbackFrameCount === 0) return;
+    setFrameIndex((i) => (i + 1) % playbackFrameCount);
+  }, [config, playbackFrameCount]);
+
+  const handleAppendEmptyFrameChange = useCallback(
+    (e) => {
+      const checked = e.target.checked;
+      setAppendEmptyFrame(checked);
+      if (!checked && config) {
+        if (frameIndex >= config.frames) {
+          setFrameIndex(config.frames - 1);
+        }
+        setFrameFpsOverrides((prev) => {
+          const next = { ...prev };
+          delete next[config.frames];
+          return next;
+        });
+      }
+    },
+    [config, frameIndex]
+  );
 
   const goToStart = useCallback(() => {
     setFrameIndex(0);
@@ -159,36 +238,129 @@ export default function SpritePlayer() {
     setIsPaused((p) => !p);
   }, []);
 
+  const getEffectiveFrameFps = useCallback(
+    (index) => frameFpsOverrides[index] ?? fps,
+    [frameFpsOverrides, fps]
+  );
+
+  const currentFrameFps = getEffectiveFrameFps(frameIndex);
+
+  const handleFrameFpsOverrideChange = useCallback(
+    (e) => {
+      const value = Number(e.target.value);
+      setFrameFpsOverrides((prev) => {
+        const next = { ...prev };
+        if (value === fps) {
+          delete next[frameIndex];
+        } else {
+          next[frameIndex] = value;
+        }
+        return next;
+      });
+    },
+    [frameIndex, fps]
+  );
+
+  const resetAllFrameFpsOverrides = useCallback(() => {
+    setFrameFpsOverrides({});
+  }, []);
+
+  const goToFrameAndPause = useCallback((index) => {
+    setFrameIndex(index);
+    setIsPaused(true);
+  }, []);
+
+  const overrideEntries = useMemo(() => {
+    if (!config) return [];
+    return Object.entries(frameFpsOverrides)
+      .map(([key, overrideFps]) => ({
+        index: Number(key),
+        fps: overrideFps,
+      }))
+      .filter(
+        (entry) =>
+          Number.isFinite(entry.index) &&
+          entry.index >= 0 &&
+          entry.index < playbackFrameCount
+      )
+      .sort((a, b) => a.index - b.index);
+  }, [frameFpsOverrides, config, playbackFrameCount]);
+
   useEffect(() => {
-    if (!config || isPaused) return;
+    if (!config || isPaused || playbackFrameCount === 0) return;
 
-    const intervalMs = 1000 / fps;
-    const id = window.setInterval(() => {
-      setFrameIndex((i) => (i + 1) % config.frames);
-    }, intervalMs);
+    const delayMs = 1000 / getEffectiveFrameFps(frameIndex);
+    const id = window.setTimeout(() => {
+      setFrameIndex((i) => (i + 1) % playbackFrameCount);
+    }, delayMs);
 
-    return () => window.clearInterval(id);
-  }, [fps, config, isPaused]);
+    return () => window.clearTimeout(id);
+  }, [
+    frameIndex,
+    fps,
+    frameFpsOverrides,
+    config,
+    isPaused,
+    playbackFrameCount,
+    getEffectiveFrameFps,
+  ]);
 
   const backgroundPosition = useMemo(() => {
-    if (!config) return '0 0';
+    if (!config || isEmptyFrame) return '0 0';
     if (config.orientation === 'horizontal') {
       return `${-(frameIndex * config.frameW)}px 0`;
     }
     return `0 ${-(frameIndex * config.frameH)}px`;
-  }, [config, frameIndex]);
+  }, [config, frameIndex, isEmptyFrame]);
 
-  const previewStyle = useMemo(() => {
-    if (!imageSrc || !config) return undefined;
+  const frameBoxStyle = useMemo(() => {
+    if (!config) return undefined;
     return {
       width: `${config.frameW}px`,
       height: `${config.frameH}px`,
+    };
+  }, [config]);
+
+  const emptyFrameStyle = useMemo(() => {
+    if (!frameBoxStyle) return undefined;
+    if (!emptyFrameUseBgColor) return frameBoxStyle;
+    return {
+      ...frameBoxStyle,
+      backgroundColor: emptyFrameBgColor,
+    };
+  }, [frameBoxStyle, emptyFrameUseBgColor, emptyFrameBgColor]);
+
+  const handleEmptyFrameBgColorChange = useCallback((e) => {
+    setEmptyFrameBgColor(e.target.value);
+    setEmptyFrameUseBgColor(true);
+  }, []);
+
+  const handleEmptyFrameEyedropper = useCallback(async () => {
+    if (!window.EyeDropper) {
+      setError('La pipette n’est pas prise en charge par ce navigateur (Chrome ou Edge recommandé).');
+      return;
+    }
+    try {
+      const dropper = new window.EyeDropper();
+      const { sRGBHex } = await dropper.open();
+      setEmptyFrameBgColor(sRGBHex);
+      setEmptyFrameUseBgColor(true);
+      setError('');
+    } catch {
+      /* annulation par l’utilisateur */
+    }
+  }, []);
+
+  const previewStyle = useMemo(() => {
+    if (!imageSrc || !config || isEmptyFrame) return undefined;
+    return {
+      ...frameBoxStyle,
       backgroundImage: `url(${imageSrc})`,
       backgroundSize: `${config.fullW}px ${config.fullH}px`,
       backgroundPosition,
       backgroundRepeat: 'no-repeat',
     };
-  }, [imageSrc, config, backgroundPosition]);
+  }, [imageSrc, config, isEmptyFrame, frameBoxStyle, backgroundPosition]);
 
   return (
     <div className="sprite-player" role="region" aria-label="Lecteur de sprite sheet">
@@ -318,6 +490,57 @@ export default function SpritePlayer() {
               <span>60</span>
             </div>
           </label>
+          <label className="sprite-player__checkbox">
+            <input
+              type="checkbox"
+              checked={appendEmptyFrame}
+              onChange={handleAppendEmptyFrameChange}
+              disabled={!config}
+            />
+            <span>Image vide en fin d&apos;animation</span>
+          </label>
+          {appendEmptyFrame && (
+            <div className="sprite-player__empty-bg">
+              <label className="sprite-player__checkbox sprite-player__checkbox--nested">
+                <input
+                  type="checkbox"
+                  checked={emptyFrameUseBgColor}
+                  onChange={(e) => setEmptyFrameUseBgColor(e.target.checked)}
+                />
+                <span>Couleur de fond personnalisée</span>
+              </label>
+              <div className="sprite-player__color-row">
+              <input
+                type="color"
+                value={emptyFrameBgColor}
+                onChange={handleEmptyFrameBgColorChange}
+                className="sprite-player__color-input"
+                disabled={!emptyFrameUseBgColor}
+                aria-label="Couleur de fond de l’image vide"
+              />
+              <button
+                type="button"
+                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                onClick={handleEmptyFrameEyedropper}
+                disabled={!emptyFrameUseBgColor}
+                title="Pipette : prélever une couleur à l’écran"
+                aria-label="Pipette : prélever une couleur à l’écran"
+              >
+                <IconEyedropper />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                onClick={() => setEmptyFrameUseBgColor(false)}
+                disabled={!emptyFrameUseBgColor}
+                title="Fond transparent"
+                aria-label="Fond transparent"
+              >
+                <IconTransparent />
+              </button>
+            </div>
+            </div>
+          )}
         </section>
       </div>
 
@@ -325,8 +548,16 @@ export default function SpritePlayer() {
 
       <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
         <div className="sprite-player__preview">
-          {previewStyle ? (
-            <div className="sprite-player__sprite" style={previewStyle} />
+          {config && frameBoxStyle ? (
+            isEmptyFrame ? (
+              <div
+                className="sprite-player__sprite sprite-player__sprite--empty"
+                style={emptyFrameStyle}
+                aria-label="Image vide"
+              />
+            ) : (
+              <div className="sprite-player__sprite" style={previewStyle} />
+            )
           ) : (
             <p className="sprite-player__placeholder">
               {imageSrc
@@ -337,10 +568,32 @@ export default function SpritePlayer() {
         </div>
         {config && (
           <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
-            <span className="sprite-player__frame-badge" aria-live="polite">
-              Image {frameIndex + 1} / {config.frames}
-              {isPaused ? ' · en pause' : ''}
-            </span>
+            <div className="sprite-player__transport-status">
+              <span className="sprite-player__frame-badge" aria-live="polite">
+                {isEmptyFrame
+                  ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
+                  : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
+                {isPaused ? ' · en pause' : ''}
+              </span>
+              {isPaused && (
+                <label className="sprite-player__frame-fps-override">
+                  <span className="sprite-player__frame-fps-override-label">
+                    FPS image :{' '}
+                    <strong className="sprite-player__fps-value">{currentFrameFps}</strong>
+                  </span>
+                  <input
+                    type="range"
+                    min={FRAME_FPS_OVERRIDE_MIN}
+                    max={FRAME_FPS_OVERRIDE_MAX}
+                    step={1}
+                    value={currentFrameFps}
+                    onChange={handleFrameFpsOverrideChange}
+                    className="sprite-player__range sprite-player__range--compact"
+                    aria-label={`FPS de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
+                  />
+                </label>
+              )}
+            </div>
             <div className="sprite-player__transport-btns">
               <button
                 type="button"
@@ -379,6 +632,39 @@ export default function SpritePlayer() {
           </div>
         )}
       </section>
+
+      {config && overrideEntries.length > 0 && (
+        <section
+          className="sprite-player__overrides"
+          aria-label="Surcharges FPS par image"
+        >
+          <h2 className="sprite-player__overrides-title">Surcharges FPS</h2>
+          <ul className="sprite-player__overrides-list">
+            {overrideEntries.map(({ index, fps: overrideFps }) => (
+              <li key={index}>
+                <button
+                  type="button"
+                  className={`sprite-player__overrides-item${frameIndex === index && isPaused ? ' sprite-player__overrides-item--active' : ''}`}
+                  onClick={() => goToFrameAndPause(index)}
+                  title={`Afficher ${getFrameLabel(index, config, appendEmptyFrame)} et mettre en pause`}
+                >
+                  <span className="sprite-player__overrides-name">
+                    {getFrameLabel(index, config, appendEmptyFrame)}
+                  </span>
+                  <span className="sprite-player__overrides-value">{overrideFps} FPS</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--reset-overrides"
+            onClick={resetAllFrameFpsOverrides}
+          >
+            Réinitialiser toutes les surcharges
+          </button>
+        </section>
+      )}
 
       {/* Image cachée pour lire naturalWidth / naturalHeight */}
       {imageSrc && (
