@@ -2,11 +2,18 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import './SpritePlayer.css';
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+const FRAME_FPS_OVERRIDE_MIN = 1;
+const FRAME_FPS_OVERRIDE_MAX = 48;
 
 function isImageFile(file) {
   if (!file) return false;
   if (ACCEPTED_TYPES.includes(file.type)) return true;
   return /\.(png|jpe?g)$/i.test(file.name);
+}
+
+function getFrameLabel(index, config, hasEmptyTail) {
+  if (hasEmptyTail && index >= config.frames) return 'Image vide';
+  return `Image ${index + 1}`;
 }
 
 /**
@@ -23,6 +30,7 @@ export default function SpritePlayer() {
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [appendEmptyFrame, setAppendEmptyFrame] = useState(false);
+  const [frameFpsOverrides, setFrameFpsOverrides] = useState({});
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
   const fileInputRef = useRef(null);
@@ -36,6 +44,7 @@ export default function SpritePlayer() {
     setConfig(null);
     setFrameIndex(0);
     setIsPaused(false);
+    setFrameFpsOverrides({});
     setNaturalSize({ w: 0, h: 0 });
 
     const reader = new FileReader();
@@ -136,6 +145,7 @@ export default function SpritePlayer() {
     });
     setFrameIndex(0);
     setIsPaused(false);
+    setFrameFpsOverrides({});
   }, [imageSrc, naturalSize, framesInput, orientation]);
 
   const playbackFrameCount = config
@@ -159,8 +169,15 @@ export default function SpritePlayer() {
     (e) => {
       const checked = e.target.checked;
       setAppendEmptyFrame(checked);
-      if (!checked && config && frameIndex >= config.frames) {
-        setFrameIndex(config.frames - 1);
+      if (!checked && config) {
+        if (frameIndex >= config.frames) {
+          setFrameIndex(config.frames - 1);
+        }
+        setFrameFpsOverrides((prev) => {
+          const next = { ...prev };
+          delete next[config.frames];
+          return next;
+        });
       }
     },
     [config, frameIndex]
@@ -174,16 +191,72 @@ export default function SpritePlayer() {
     setIsPaused((p) => !p);
   }, []);
 
+  const getEffectiveFrameFps = useCallback(
+    (index) => frameFpsOverrides[index] ?? fps,
+    [frameFpsOverrides, fps]
+  );
+
+  const currentFrameFps = getEffectiveFrameFps(frameIndex);
+
+  const handleFrameFpsOverrideChange = useCallback(
+    (e) => {
+      const value = Number(e.target.value);
+      setFrameFpsOverrides((prev) => {
+        const next = { ...prev };
+        if (value === fps) {
+          delete next[frameIndex];
+        } else {
+          next[frameIndex] = value;
+        }
+        return next;
+      });
+    },
+    [frameIndex, fps]
+  );
+
+  const resetAllFrameFpsOverrides = useCallback(() => {
+    setFrameFpsOverrides({});
+  }, []);
+
+  const goToFrameAndPause = useCallback((index) => {
+    setFrameIndex(index);
+    setIsPaused(true);
+  }, []);
+
+  const overrideEntries = useMemo(() => {
+    if (!config) return [];
+    return Object.entries(frameFpsOverrides)
+      .map(([key, overrideFps]) => ({
+        index: Number(key),
+        fps: overrideFps,
+      }))
+      .filter(
+        (entry) =>
+          Number.isFinite(entry.index) &&
+          entry.index >= 0 &&
+          entry.index < playbackFrameCount
+      )
+      .sort((a, b) => a.index - b.index);
+  }, [frameFpsOverrides, config, playbackFrameCount]);
+
   useEffect(() => {
     if (!config || isPaused || playbackFrameCount === 0) return;
 
-    const intervalMs = 1000 / fps;
-    const id = window.setInterval(() => {
+    const delayMs = 1000 / getEffectiveFrameFps(frameIndex);
+    const id = window.setTimeout(() => {
       setFrameIndex((i) => (i + 1) % playbackFrameCount);
-    }, intervalMs);
+    }, delayMs);
 
-    return () => window.clearInterval(id);
-  }, [fps, config, isPaused, playbackFrameCount]);
+    return () => window.clearTimeout(id);
+  }, [
+    frameIndex,
+    fps,
+    frameFpsOverrides,
+    config,
+    isPaused,
+    playbackFrameCount,
+    getEffectiveFrameFps,
+  ]);
 
   const backgroundPosition = useMemo(() => {
     if (!config || isEmptyFrame) return '0 0';
@@ -376,12 +449,32 @@ export default function SpritePlayer() {
         </div>
         {config && (
           <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
-            <span className="sprite-player__frame-badge" aria-live="polite">
-              {isEmptyFrame
-                ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
-                : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
-              {isPaused ? ' · en pause' : ''}
-            </span>
+            <div className="sprite-player__transport-status">
+              <span className="sprite-player__frame-badge" aria-live="polite">
+                {isEmptyFrame
+                  ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
+                  : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
+                {isPaused ? ' · en pause' : ''}
+              </span>
+              {isPaused && (
+                <label className="sprite-player__frame-fps-override">
+                  <span className="sprite-player__frame-fps-override-label">
+                    FPS image :{' '}
+                    <strong className="sprite-player__fps-value">{currentFrameFps}</strong>
+                  </span>
+                  <input
+                    type="range"
+                    min={FRAME_FPS_OVERRIDE_MIN}
+                    max={FRAME_FPS_OVERRIDE_MAX}
+                    step={1}
+                    value={currentFrameFps}
+                    onChange={handleFrameFpsOverrideChange}
+                    className="sprite-player__range sprite-player__range--compact"
+                    aria-label={`FPS de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
+                  />
+                </label>
+              )}
+            </div>
             <div className="sprite-player__transport-btns">
               <button
                 type="button"
@@ -420,6 +513,39 @@ export default function SpritePlayer() {
           </div>
         )}
       </section>
+
+      {config && overrideEntries.length > 0 && (
+        <section
+          className="sprite-player__overrides"
+          aria-label="Surcharges FPS par image"
+        >
+          <h2 className="sprite-player__overrides-title">Surcharges FPS</h2>
+          <ul className="sprite-player__overrides-list">
+            {overrideEntries.map(({ index, fps: overrideFps }) => (
+              <li key={index}>
+                <button
+                  type="button"
+                  className={`sprite-player__overrides-item${frameIndex === index && isPaused ? ' sprite-player__overrides-item--active' : ''}`}
+                  onClick={() => goToFrameAndPause(index)}
+                  title={`Afficher ${getFrameLabel(index, config, appendEmptyFrame)} et mettre en pause`}
+                >
+                  <span className="sprite-player__overrides-name">
+                    {getFrameLabel(index, config, appendEmptyFrame)}
+                  </span>
+                  <span className="sprite-player__overrides-value">{overrideFps} FPS</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--reset-overrides"
+            onClick={resetAllFrameFpsOverrides}
+          >
+            Réinitialiser toutes les surcharges
+          </button>
+        </section>
+      )}
 
       {/* Image cachée pour lire naturalWidth / naturalHeight */}
       {imageSrc && (
