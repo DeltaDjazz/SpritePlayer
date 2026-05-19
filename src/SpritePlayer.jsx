@@ -16,13 +16,19 @@ function getFrameLabel(index, config, hasEmptyTail) {
   return `Image ${index + 1}`;
 }
 
+/** Orientation alignée sur le côté le plus long de l'image. */
+function detectOrientationFromSize(width, height) {
+  if (width > height) return 'horizontal';
+  return 'vertical';
+}
+
 /**
  * Lecteur de sprite sheet en boucle (style GIF), sans backend.
  */
 export default function SpritePlayer() {
   const [imageSrc, setImageSrc] = useState(null);
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
-  const [orientation, setOrientation] = useState('horizontal');
+  const [orientation, setOrientation] = useState('vertical');
   const [framesInput, setFramesInput] = useState('8');
   const [fps, setFps] = useState(12);
   const [config, setConfig] = useState(null);
@@ -106,6 +112,7 @@ export default function SpritePlayer() {
   const handleImageLoad = useCallback((e) => {
     const { naturalWidth, naturalHeight } = e.currentTarget;
     setNaturalSize({ w: naturalWidth, h: naturalHeight });
+    setOrientation(detectOrientationFromSize(naturalWidth, naturalHeight));
   }, []);
 
   const handleValidate = useCallback(() => {
