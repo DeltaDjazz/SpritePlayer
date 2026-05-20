@@ -58,6 +58,61 @@ function IconTransparent() {
   );
 }
 
+function IconTransportStart() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="5" y="6" width="2" height="12" fill="currentColor" />
+      <path d="M17 6L11 12l6 6V6z" fill="currentColor" />
+      <path d="M13 6L7 12l6 6V6z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportPrev() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="5" y="6" width="2" height="12" fill="currentColor" />
+      <path d="M17 6L11 12l6 6V6z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportPlay() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <path d="M8 6l10 6-10 6V6z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportPause() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="7" y="6" width="3.5" height="12" fill="currentColor" />
+      <rect x="13.5" y="6" width="3.5" height="12" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportNext() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <path d="M7 6l6 6-6 6V6z" fill="currentColor" />
+      <rect x="17" y="6" width="2" height="12" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportEnd() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <path d="M7 6l6 6-6 6V6z" fill="currentColor" />
+      <path d="M11 6l6 6-6 6V6z" fill="currentColor" />
+      <rect x="17" y="6" width="2" height="12" fill="currentColor" />
+    </svg>
+  );
+}
+
 /**
  * Lecteur de sprite sheet en boucle (style GIF), sans backend.
  */
@@ -233,6 +288,11 @@ export default function SpritePlayer() {
   const goToStart = useCallback(() => {
     setFrameIndex(0);
   }, []);
+
+  const goToEnd = useCallback(() => {
+    if (!config || playbackFrameCount === 0) return;
+    setFrameIndex(playbackFrameCount - 1);
+  }, [config, playbackFrameCount]);
 
   const togglePause = useCallback(() => {
     setIsPaused((p) => !p);
@@ -594,39 +654,52 @@ export default function SpritePlayer() {
                 </label>
               )}
             </div>
-            <div className="sprite-player__transport-btns">
+            <div className="sprite-player__transport-bar">
               <button
                 type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--secondary"
+                className="sprite-player__transport-btn"
                 onClick={goToStart}
-                title="Revenir à la première image"
+                title="Première image"
+                aria-label="Première image"
               >
-                Début
+                <IconTransportStart />
               </button>
               <button
                 type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--secondary"
+                className="sprite-player__transport-btn"
                 onClick={goPrevFrame}
                 title="Image précédente"
+                aria-label="Image précédente"
               >
-                Précédent
+                <IconTransportPrev />
               </button>
               <button
                 type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--secondary"
-                onClick={goNextFrame}
-                title="Image suivante"
-              >
-                Suivant
-              </button>
-              <button
-                type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--accent"
+                className="sprite-player__transport-btn sprite-player__transport-btn--play"
                 onClick={togglePause}
                 aria-pressed={!isPaused}
-                title={isPaused ? 'Reprendre la lecture' : 'Mettre en pause'}
+                title={isPaused ? 'Lecture' : 'Pause'}
+                aria-label={isPaused ? 'Lecture' : 'Pause'}
               >
-                {isPaused ? 'Lecture' : 'Pause'}
+                {isPaused ? <IconTransportPlay /> : <IconTransportPause />}
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goNextFrame}
+                title="Image suivante"
+                aria-label="Image suivante"
+              >
+                <IconTransportNext />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goToEnd}
+                title="Dernière image"
+                aria-label="Dernière image"
+              >
+                <IconTransportEnd />
               </button>
             </div>
           </div>
