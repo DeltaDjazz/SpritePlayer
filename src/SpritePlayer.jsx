@@ -431,59 +431,175 @@ export default function SpritePlayer() {
         </p>
       </header>
 
-      <div className="sprite-player__grid">
-        <section className="sprite-player__panel sprite-player__panel--import">
-          <h2 className="sprite-player__panel-title">Image</h2>
-          <div
-            className={`sprite-player__dropzone${isDragging ? ' sprite-player__dropzone--active' : ''}${imageSrc ? ' sprite-player__dropzone--has-image' : ''}`}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                fileInputRef.current?.click();
-              }
-            }}
-            aria-label="Zone de dépôt : glissez une image PNG ou JPEG, ou appuyez pour parcourir"
-          >
-            <p className="sprite-player__dropzone-text">
-              {isDragging
-                ? 'Relâchez pour importer'
-                : 'Glissez une image ici'}
-            </p>
-            <p className="sprite-player__dropzone-hint">PNG ou JPEG</p>
-            <button
-              type="button"
-              className="sprite-player__file-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-            >
-              Parcourir…
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,.png,.jpg,.jpeg"
-              className="sprite-player__file-input"
-              onChange={handleFileChange}
-              tabIndex={-1}
-              aria-hidden
-            />
-          </div>
+      {error && <p className="sprite-player__error" role="alert">{error}</p>}
+
+      <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
+        <div
+          className={`sprite-player__preview${isDragging ? ' sprite-player__preview--dragging' : ''}${!imageSrc ? ' sprite-player__preview--empty' : ''}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          aria-label="Zone d’aperçu : glissez une image PNG ou JPEG, ou appuyez pour parcourir"
+        >
+          {isDragging && (
+            <div className="sprite-player__preview-overlay" aria-hidden>
+              Relâchez pour importer
+            </div>
+          )}
+          {config && frameBoxStyle ? (
+            isEmptyFrame ? (
+              <div
+                className="sprite-player__sprite sprite-player__sprite--empty"
+                style={emptyFrameStyle}
+                aria-label="Image vide"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <div
+                className="sprite-player__sprite"
+                style={previewStyle}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )
+          ) : imageSrc ? (
+            <>
+              <img
+                src={imageSrc}
+                alt="Feuille de sprites importée"
+                className="sprite-player__preview-sheet"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <p className="sprite-player__placeholder sprite-player__placeholder--overlay">
+                Configurez les frames puis cliquez sur « Valider & Lancer ».
+                <span className="sprite-player__placeholder-hint">
+                  Glissez une autre image pour remplacer
+                </span>
+              </p>
+            </>
+          ) : (
+            <div className="sprite-player__placeholder">
+              <p className="sprite-player__placeholder-text">
+                {isDragging ? 'Relâchez pour importer' : 'Glissez une image ici'}
+              </p>
+              <p className="sprite-player__placeholder-hint">PNG ou JPEG</p>
+              <button
+                type="button"
+                className="sprite-player__file-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                Parcourir…
+              </button>
+            </div>
+          )}
           {naturalSize.w > 0 && (
-            <p className="sprite-player__meta">
+            <p className="sprite-player__preview-meta">
               {naturalSize.w} × {naturalSize.h} px
             </p>
           )}
-        </section>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+            className="sprite-player__file-input"
+            onChange={handleFileChange}
+            tabIndex={-1}
+            aria-hidden
+          />
+        </div>
+        {config && (
+          <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
+            <div className="sprite-player__transport-status">
+              <span className="sprite-player__frame-badge" aria-live="polite">
+                {isEmptyFrame
+                  ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
+                  : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
+                {isPaused ? ' · en pause' : ''}
+              </span>
+              {isPaused && (
+                <label className="sprite-player__frame-fps-override">
+                  <span className="sprite-player__frame-fps-override-label">
+                    FPS image :{' '}
+                    <strong className="sprite-player__fps-value">{currentFrameFps}</strong>
+                  </span>
+                  <input
+                    type="range"
+                    min={FRAME_FPS_OVERRIDE_MIN}
+                    max={FRAME_FPS_OVERRIDE_MAX}
+                    step={1}
+                    value={currentFrameFps}
+                    onChange={handleFrameFpsOverrideChange}
+                    className="sprite-player__range sprite-player__range--compact"
+                    aria-label={`FPS de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
+                  />
+                </label>
+              )}
+            </div>
+            <div className="sprite-player__transport-bar">
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goToStart}
+                title="Première image"
+                aria-label="Première image"
+              >
+                <IconTransportStart />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goPrevFrame}
+                title="Image précédente"
+                aria-label="Image précédente"
+              >
+                <IconTransportPrev />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn sprite-player__transport-btn--play"
+                onClick={togglePause}
+                aria-pressed={!isPaused}
+                title={isPaused ? 'Lecture' : 'Pause'}
+                aria-label={isPaused ? 'Lecture' : 'Pause'}
+              >
+                {isPaused ? <IconTransportPlay /> : <IconTransportPause />}
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goNextFrame}
+                title="Image suivante"
+                aria-label="Image suivante"
+              >
+                <IconTransportNext />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goToEnd}
+                title="Dernière image"
+                aria-label="Dernière image"
+              >
+                <IconTransportEnd />
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
 
+      <div className="sprite-player__grid">
         <section className="sprite-player__panel sprite-player__panel--config">
           <h2 className="sprite-player__panel-title">Feuille de sprites</h2>
 
@@ -603,108 +719,6 @@ export default function SpritePlayer() {
           )}
         </section>
       </div>
-
-      {error && <p className="sprite-player__error" role="alert">{error}</p>}
-
-      <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
-        <div className="sprite-player__preview">
-          {config && frameBoxStyle ? (
-            isEmptyFrame ? (
-              <div
-                className="sprite-player__sprite sprite-player__sprite--empty"
-                style={emptyFrameStyle}
-                aria-label="Image vide"
-              />
-            ) : (
-              <div className="sprite-player__sprite" style={previewStyle} />
-            )
-          ) : (
-            <p className="sprite-player__placeholder">
-              {imageSrc
-                ? 'Configurez les frames puis cliquez sur « Valider & Lancer ».'
-                : 'Glissez une image ou importez-la depuis le panneau Image.'}
-            </p>
-          )}
-        </div>
-        {config && (
-          <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
-            <div className="sprite-player__transport-status">
-              <span className="sprite-player__frame-badge" aria-live="polite">
-                {isEmptyFrame
-                  ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
-                  : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
-                {isPaused ? ' · en pause' : ''}
-              </span>
-              {isPaused && (
-                <label className="sprite-player__frame-fps-override">
-                  <span className="sprite-player__frame-fps-override-label">
-                    FPS image :{' '}
-                    <strong className="sprite-player__fps-value">{currentFrameFps}</strong>
-                  </span>
-                  <input
-                    type="range"
-                    min={FRAME_FPS_OVERRIDE_MIN}
-                    max={FRAME_FPS_OVERRIDE_MAX}
-                    step={1}
-                    value={currentFrameFps}
-                    onChange={handleFrameFpsOverrideChange}
-                    className="sprite-player__range sprite-player__range--compact"
-                    aria-label={`FPS de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
-                  />
-                </label>
-              )}
-            </div>
-            <div className="sprite-player__transport-bar">
-              <button
-                type="button"
-                className="sprite-player__transport-btn"
-                onClick={goToStart}
-                title="Première image"
-                aria-label="Première image"
-              >
-                <IconTransportStart />
-              </button>
-              <button
-                type="button"
-                className="sprite-player__transport-btn"
-                onClick={goPrevFrame}
-                title="Image précédente"
-                aria-label="Image précédente"
-              >
-                <IconTransportPrev />
-              </button>
-              <button
-                type="button"
-                className="sprite-player__transport-btn sprite-player__transport-btn--play"
-                onClick={togglePause}
-                aria-pressed={!isPaused}
-                title={isPaused ? 'Lecture' : 'Pause'}
-                aria-label={isPaused ? 'Lecture' : 'Pause'}
-              >
-                {isPaused ? <IconTransportPlay /> : <IconTransportPause />}
-              </button>
-              <button
-                type="button"
-                className="sprite-player__transport-btn"
-                onClick={goNextFrame}
-                title="Image suivante"
-                aria-label="Image suivante"
-              >
-                <IconTransportNext />
-              </button>
-              <button
-                type="button"
-                className="sprite-player__transport-btn"
-                onClick={goToEnd}
-                title="Dernière image"
-                aria-label="Dernière image"
-              >
-                <IconTransportEnd />
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
 
       {config && overrideEntries.length > 0 && (
         <section
