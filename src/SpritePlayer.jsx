@@ -2,8 +2,20 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import './SpritePlayer.css';
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
-const FRAME_FPS_OVERRIDE_MIN = 1;
-const FRAME_FPS_OVERRIDE_MAX = 48;
+const FPS_MIN = 1;
+const FPS_MAX = 30;
+const DEFAULT_FPS = 12;
+const FRAMES_PER_IMAGE_MIN = 1;
+const FRAMES_PER_IMAGE_MAX = 999;
+
+/** Durée réelle = (frames / fps) secondes. */
+function durationMsFromFramesAndFps(frames, fps) {
+  return (frames / fps) * 1000;
+}
+
+function formatSecondsPerImage(frames, fps) {
+  return (frames / fps).toFixed(2);
+}
 
 function isImageFile(file) {
   if (!file) return false;
@@ -58,6 +70,61 @@ function IconTransparent() {
   );
 }
 
+function IconTransportStart() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="5" y="6" width="2" height="12" fill="currentColor" />
+      <path d="M17 6L11 12l6 6V6z" fill="currentColor" />
+      <path d="M13 6L7 12l6 6V6z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportPrev() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="5" y="6" width="2" height="12" fill="currentColor" />
+      <path d="M17 6L11 12l6 6V6z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportPlay() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <path d="M8 6l10 6-10 6V6z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportPause() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <rect x="7" y="6" width="3.5" height="12" fill="currentColor" />
+      <rect x="13.5" y="6" width="3.5" height="12" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportNext() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <path d="M7 6l6 6-6 6V6z" fill="currentColor" />
+      <rect x="17" y="6" width="2" height="12" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconTransportEnd() {
+  return (
+    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+      <path d="M7 6l6 6-6 6V6z" fill="currentColor" />
+      <path d="M11 6l6 6-6 6V6z" fill="currentColor" />
+      <rect x="17" y="6" width="2" height="12" fill="currentColor" />
+    </svg>
+  );
+}
+
 /**
  * Lecteur de sprite sheet en boucle (style GIF), sans backend.
  */
@@ -65,8 +132,9 @@ export default function SpritePlayer() {
   const [imageSrc, setImageSrc] = useState(null);
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
   const [orientation, setOrientation] = useState('vertical');
-  const [framesInput, setFramesInput] = useState('8');
-  const [fps, setFps] = useState(12);
+  const [framesInput, setFramesInput] = useState('6');
+  const [fps, setFps] = useState(DEFAULT_FPS);
+  const [framesPerImage, setFramesPerImage] = useState(1);
   const [config, setConfig] = useState(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -74,7 +142,7 @@ export default function SpritePlayer() {
   const [appendEmptyFrame, setAppendEmptyFrame] = useState(false);
   const [emptyFrameUseBgColor, setEmptyFrameUseBgColor] = useState(false);
   const [emptyFrameBgColor, setEmptyFrameBgColor] = useState('#000000');
-  const [frameFpsOverrides, setFrameFpsOverrides] = useState({});
+  const [framesPerImageOverrides, setFramesPerImageOverrides] = useState({});
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
   const fileInputRef = useRef(null);
@@ -88,7 +156,7 @@ export default function SpritePlayer() {
     setConfig(null);
     setFrameIndex(0);
     setIsPaused(false);
-    setFrameFpsOverrides({});
+    setFramesPerImageOverrides({});
     setEmptyFrameUseBgColor(false);
     setEmptyFrameBgColor('#000000');
     setNaturalSize({ w: 0, h: 0 });
@@ -192,7 +260,7 @@ export default function SpritePlayer() {
     });
     setFrameIndex(0);
     setIsPaused(false);
-    setFrameFpsOverrides({});
+    setFramesPerImageOverrides({});
   }, [imageSrc, naturalSize, framesInput, orientation]);
 
   const playbackFrameCount = config
@@ -220,7 +288,7 @@ export default function SpritePlayer() {
         if (frameIndex >= config.frames) {
           setFrameIndex(config.frames - 1);
         }
-        setFrameFpsOverrides((prev) => {
+        setFramesPerImageOverrides((prev) => {
           const next = { ...prev };
           delete next[config.frames];
           return next;
@@ -234,23 +302,53 @@ export default function SpritePlayer() {
     setFrameIndex(0);
   }, []);
 
+  const goToEnd = useCallback(() => {
+    if (!config || playbackFrameCount === 0) return;
+    setFrameIndex(playbackFrameCount - 1);
+  }, [config, playbackFrameCount]);
+
   const togglePause = useCallback(() => {
     setIsPaused((p) => !p);
   }, []);
 
-  const getEffectiveFrameFps = useCallback(
-    (index) => frameFpsOverrides[index] ?? fps,
-    [frameFpsOverrides, fps]
+  const getEffectiveFramesPerImage = useCallback(
+    (index) => framesPerImageOverrides[index] ?? framesPerImage,
+    [framesPerImageOverrides, framesPerImage]
   );
 
-  const currentFrameFps = getEffectiveFrameFps(frameIndex);
+  const getEffectiveDurationMs = useCallback(
+    (index) => durationMsFromFramesAndFps(getEffectiveFramesPerImage(index), fps),
+    [getEffectiveFramesPerImage, fps]
+  );
 
-  const handleFrameFpsOverrideChange = useCallback(
+  const currentFramesPerImage = getEffectiveFramesPerImage(frameIndex);
+  const currentDurationSec = formatSecondsPerImage(currentFramesPerImage, fps);
+
+  const handleFpsChange = useCallback((e) => {
+    setFps(Number(e.target.value));
+  }, []);
+
+  const parseFramesPerImage = useCallback((raw) => {
+    const n = parseInt(String(raw).trim(), 10);
+    if (!Number.isFinite(n) || n < FRAMES_PER_IMAGE_MIN) return null;
+    return Math.min(n, FRAMES_PER_IMAGE_MAX);
+  }, []);
+
+  const handleFramesPerImageChange = useCallback(
     (e) => {
-      const value = Number(e.target.value);
-      setFrameFpsOverrides((prev) => {
+      const value = parseFramesPerImage(e.target.value);
+      if (value !== null) setFramesPerImage(value);
+    },
+    [parseFramesPerImage]
+  );
+
+  const handleFrameFramesPerImageOverrideChange = useCallback(
+    (e) => {
+      const value = parseFramesPerImage(e.target.value);
+      if (value === null) return;
+      setFramesPerImageOverrides((prev) => {
         const next = { ...prev };
-        if (value === fps) {
+        if (value === framesPerImage) {
           delete next[frameIndex];
         } else {
           next[frameIndex] = value;
@@ -258,11 +356,11 @@ export default function SpritePlayer() {
         return next;
       });
     },
-    [frameIndex, fps]
+    [frameIndex, framesPerImage, parseFramesPerImage]
   );
 
-  const resetAllFrameFpsOverrides = useCallback(() => {
-    setFrameFpsOverrides({});
+  const resetAllFramesPerImageOverrides = useCallback(() => {
+    setFramesPerImageOverrides({});
   }, []);
 
   const goToFrameAndPause = useCallback((index) => {
@@ -272,10 +370,10 @@ export default function SpritePlayer() {
 
   const overrideEntries = useMemo(() => {
     if (!config) return [];
-    return Object.entries(frameFpsOverrides)
-      .map(([key, overrideFps]) => ({
+    return Object.entries(framesPerImageOverrides)
+      .map(([key, frameCount]) => ({
         index: Number(key),
-        fps: overrideFps,
+        frameCount,
       }))
       .filter(
         (entry) =>
@@ -284,12 +382,12 @@ export default function SpritePlayer() {
           entry.index < playbackFrameCount
       )
       .sort((a, b) => a.index - b.index);
-  }, [frameFpsOverrides, config, playbackFrameCount]);
+  }, [framesPerImageOverrides, config, playbackFrameCount]);
 
   useEffect(() => {
     if (!config || isPaused || playbackFrameCount === 0) return;
 
-    const delayMs = 1000 / getEffectiveFrameFps(frameIndex);
+    const delayMs = getEffectiveDurationMs(frameIndex);
     const id = window.setTimeout(() => {
       setFrameIndex((i) => (i + 1) % playbackFrameCount);
     }, delayMs);
@@ -298,11 +396,12 @@ export default function SpritePlayer() {
   }, [
     frameIndex,
     fps,
-    frameFpsOverrides,
+    framesPerImage,
+    framesPerImageOverrides,
     config,
     isPaused,
     playbackFrameCount,
-    getEffectiveFrameFps,
+    getEffectiveDurationMs,
   ]);
 
   const backgroundPosition = useMemo(() => {
@@ -371,99 +470,51 @@ export default function SpritePlayer() {
         </p>
       </header>
 
-      <div className="sprite-player__grid">
-        <section className="sprite-player__panel sprite-player__panel--import">
-          <h2 className="sprite-player__panel-title">Image</h2>
-          <div
-            className={`sprite-player__dropzone${isDragging ? ' sprite-player__dropzone--active' : ''}${imageSrc ? ' sprite-player__dropzone--has-image' : ''}`}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                fileInputRef.current?.click();
-              }
-            }}
-            aria-label="Zone de dépôt : glissez une image PNG ou JPEG, ou appuyez pour parcourir"
-          >
-            <p className="sprite-player__dropzone-text">
-              {isDragging
-                ? 'Relâchez pour importer'
-                : 'Glissez une image ici'}
-            </p>
-            <p className="sprite-player__dropzone-hint">PNG ou JPEG</p>
-            <button
-              type="button"
-              className="sprite-player__file-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-            >
-              Parcourir…
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,.png,.jpg,.jpeg"
-              className="sprite-player__file-input"
-              onChange={handleFileChange}
-              tabIndex={-1}
-              aria-hidden
-            />
-          </div>
-          {naturalSize.w > 0 && (
-            <p className="sprite-player__meta">
-              {naturalSize.w} × {naturalSize.h} px
-            </p>
-          )}
-        </section>
+      {error && <p className="sprite-player__error" role="alert">{error}</p>}
 
+      <div className="sprite-player__grid">
         <section className="sprite-player__panel sprite-player__panel--config">
           <h2 className="sprite-player__panel-title">Feuille de sprites</h2>
 
-          <fieldset className="sprite-player__fieldset">
-            <legend className="sprite-player__legend">Orientation</legend>
-            <div className="sprite-player__orientation">
-              <label className="sprite-player__radio">
-                <input
-                  type="radio"
-                  name="sprite-orientation"
-                  value="horizontal"
-                  checked={orientation === 'horizontal'}
-                  onChange={() => setOrientation('horizontal')}
-                />
-                <span>Horizontale ➡️</span>
-              </label>
-              <label className="sprite-player__radio">
-                <input
-                  type="radio"
-                  name="sprite-orientation"
-                  value="vertical"
-                  checked={orientation === 'vertical'}
-                  onChange={() => setOrientation('vertical')}
-                />
-                <span>Verticale ⬇️</span>
-              </label>
-            </div>
-          </fieldset>
+          <div className="sprite-player__config-row">
+            <fieldset className="sprite-player__fieldset">
+              <legend className="sprite-player__legend">Orientation</legend>
+              <div className="sprite-player__orientation">
+                <label className="sprite-player__radio">
+                  <input
+                    type="radio"
+                    name="sprite-orientation"
+                    value="horizontal"
+                    checked={orientation === 'horizontal'}
+                    onChange={() => setOrientation('horizontal')}
+                  />
+                  <span>Horizontale ➡️</span>
+                </label>
+                <label className="sprite-player__radio">
+                  <input
+                    type="radio"
+                    name="sprite-orientation"
+                    value="vertical"
+                    checked={orientation === 'vertical'}
+                    onChange={() => setOrientation('vertical')}
+                  />
+                  <span>Verticale ⬇️</span>
+                </label>
+              </div>
+            </fieldset>
 
-          <label className="sprite-player__field">
-            <span className="sprite-player__label">Nombre d&apos;images (frames)</span>
-            <input
-              type="number"
-              min={1}
-              step={1}
-              className="sprite-player__input"
-              value={framesInput}
-              onChange={(e) => setFramesInput(e.target.value)}
-            />
-          </label>
+            <label className="sprite-player__field sprite-player__field--frames">
+              <span className="sprite-player__label">Nombre d&apos;images</span>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                className="sprite-player__input"
+                value={framesInput}
+                onChange={(e) => setFramesInput(e.target.value)}
+              />
+            </label>
+          </div>
 
           <button type="button" className="sprite-player__btn sprite-player__btn--primary" onClick={handleValidate}>
             Valider &amp; Lancer
@@ -472,24 +523,41 @@ export default function SpritePlayer() {
 
         <section className="sprite-player__panel sprite-player__panel--speed">
           <h2 className="sprite-player__panel-title">Vitesse</h2>
-          <label className="sprite-player__field sprite-player__field--slider">
-            <span className="sprite-player__label">
+          <div className="sprite-player__speed-row">
+            <span className="sprite-player__label sprite-player__speed-fps-label">
               FPS : <strong className="sprite-player__fps-value">{fps}</strong>
             </span>
+            <span className="sprite-player__label sprite-player__speed-frame-label">Frame Time</span>
             <input
               type="range"
-              min={1}
-              max={60}
+              min={FPS_MIN}
+              max={FPS_MAX}
               step={1}
               value={fps}
-              onChange={(e) => setFps(Number(e.target.value))}
-              className="sprite-player__range"
+              onChange={handleFpsChange}
+              className="sprite-player__range sprite-player__speed-fps-range"
+              aria-label="Images par seconde"
             />
-            <div className="sprite-player__range-ticks" aria-hidden>
-              <span>1</span>
-              <span>60</span>
+            <div className="sprite-player__frame-time-controls">
+              <input
+                type="number"
+                min={FRAMES_PER_IMAGE_MIN}
+                max={FRAMES_PER_IMAGE_MAX}
+                step={1}
+                className="sprite-player__input sprite-player__input--frame-time"
+                value={framesPerImage}
+                onChange={handleFramesPerImageChange}
+                aria-label="Temps par image en nombre de frames pour toutes les images"
+              />
+              <span className="sprite-player__frame-time-hint" aria-live="polite">
+                ={formatSecondsPerImage(framesPerImage, fps)}s
+              </span>
             </div>
-          </label>
+            <div className="sprite-player__range-ticks sprite-player__speed-fps-ticks" aria-hidden>
+              <span>{FPS_MIN}</span>
+              <span>{FPS_MAX}</span>
+            </div>
+          </div>
           <label className="sprite-player__checkbox">
             <input
               type="checkbox"
@@ -544,27 +612,91 @@ export default function SpritePlayer() {
         </section>
       </div>
 
-      {error && <p className="sprite-player__error" role="alert">{error}</p>}
-
       <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
-        <div className="sprite-player__preview">
+        <div
+          className={`sprite-player__preview${isDragging ? ' sprite-player__preview--dragging' : ''}${!imageSrc ? ' sprite-player__preview--empty' : ''}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          aria-label="Zone d’aperçu : glissez une image PNG ou JPEG, ou appuyez pour parcourir"
+        >
+          {isDragging && (
+            <div className="sprite-player__preview-overlay" aria-hidden>
+              Relâchez pour importer
+            </div>
+          )}
           {config && frameBoxStyle ? (
             isEmptyFrame ? (
               <div
                 className="sprite-player__sprite sprite-player__sprite--empty"
                 style={emptyFrameStyle}
                 aria-label="Image vide"
+                onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <div className="sprite-player__sprite" style={previewStyle} />
+              <div
+                className="sprite-player__sprite"
+                style={previewStyle}
+                onClick={(e) => e.stopPropagation()}
+              />
             )
+          ) : imageSrc ? (
+            <>
+              <img
+                src={imageSrc}
+                alt="Feuille de sprites importée"
+                className="sprite-player__preview-sheet"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <p className="sprite-player__placeholder sprite-player__placeholder--overlay">
+                Configurez les frames puis cliquez sur « Valider & Lancer ».
+                <span className="sprite-player__placeholder-hint">
+                  Glissez une autre image pour remplacer
+                </span>
+              </p>
+            </>
           ) : (
-            <p className="sprite-player__placeholder">
-              {imageSrc
-                ? 'Configurez les frames puis cliquez sur « Valider & Lancer ».'
-                : 'Glissez une image ou importez-la depuis le panneau Image.'}
+            <div className="sprite-player__placeholder">
+              <p className="sprite-player__placeholder-text">
+                {isDragging ? 'Relâchez pour importer' : 'Glissez une image ici'}
+              </p>
+              <p className="sprite-player__placeholder-hint">PNG ou JPEG</p>
+              <button
+                type="button"
+                className="sprite-player__file-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                Parcourir…
+              </button>
+            </div>
+          )}
+          {naturalSize.w > 0 && (
+            <p className="sprite-player__preview-meta">
+              {naturalSize.w} × {naturalSize.h} px
             </p>
           )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+            className="sprite-player__file-input"
+            onChange={handleFileChange}
+            tabIndex={-1}
+            aria-hidden
+          />
         </div>
         {config && (
           <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
@@ -576,57 +708,77 @@ export default function SpritePlayer() {
                 {isPaused ? ' · en pause' : ''}
               </span>
               {isPaused && (
-                <label className="sprite-player__frame-fps-override">
-                  <span className="sprite-player__frame-fps-override-label">
-                    FPS image :{' '}
-                    <strong className="sprite-player__fps-value">{currentFrameFps}</strong>
+                <label className="sprite-player__frame-frames-override">
+                  <span className="sprite-player__frame-frames-override-label">
+                    Frame Time :{' '}
+                    <strong className="sprite-player__fps-value">
+                      {currentFramesPerImage} frame{currentFramesPerImage > 1 ? 's' : ''}
+                    </strong>
+                    {' '}
+                    <span className="sprite-player__frame-frames-override-hint">
+                      ({currentDurationSec} s)
+                    </span>
                   </span>
                   <input
-                    type="range"
-                    min={FRAME_FPS_OVERRIDE_MIN}
-                    max={FRAME_FPS_OVERRIDE_MAX}
+                    type="number"
+                    min={FRAMES_PER_IMAGE_MIN}
+                    max={FRAMES_PER_IMAGE_MAX}
                     step={1}
-                    value={currentFrameFps}
-                    onChange={handleFrameFpsOverrideChange}
-                    className="sprite-player__range sprite-player__range--compact"
-                    aria-label={`FPS de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
+                    value={currentFramesPerImage}
+                    onChange={handleFrameFramesPerImageOverrideChange}
+                    onClick={(e) => e.stopPropagation()}
+                    className="sprite-player__input sprite-player__input--compact"
+                    aria-label={`Temps par image en frames de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
                   />
                 </label>
               )}
             </div>
-            <div className="sprite-player__transport-btns">
+            <div className="sprite-player__transport-bar">
               <button
                 type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--secondary"
+                className="sprite-player__transport-btn"
                 onClick={goToStart}
-                title="Revenir à la première image"
+                title="Première image"
+                aria-label="Première image"
               >
-                Début
+                <IconTransportStart />
               </button>
               <button
                 type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--secondary"
+                className="sprite-player__transport-btn"
                 onClick={goPrevFrame}
                 title="Image précédente"
+                aria-label="Image précédente"
               >
-                Précédent
+                <IconTransportPrev />
               </button>
               <button
                 type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--secondary"
-                onClick={goNextFrame}
-                title="Image suivante"
-              >
-                Suivant
-              </button>
-              <button
-                type="button"
-                className="sprite-player__btn sprite-player__btn--toolbar sprite-player__btn--accent"
+                className="sprite-player__transport-btn sprite-player__transport-btn--play"
                 onClick={togglePause}
                 aria-pressed={!isPaused}
-                title={isPaused ? 'Reprendre la lecture' : 'Mettre en pause'}
+                title={isPaused ? 'Lecture' : 'Pause'}
+                aria-label={isPaused ? 'Lecture' : 'Pause'}
               >
-                {isPaused ? 'Lecture' : 'Pause'}
+                {isPaused ? <IconTransportPlay /> : <IconTransportPause />}
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goNextFrame}
+                title="Image suivante"
+                aria-label="Image suivante"
+              >
+                <IconTransportNext />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__transport-btn"
+                onClick={goToEnd}
+                title="Dernière image"
+                aria-label="Dernière image"
+              >
+                <IconTransportEnd />
               </button>
             </div>
           </div>
@@ -636,11 +788,11 @@ export default function SpritePlayer() {
       {config && overrideEntries.length > 0 && (
         <section
           className="sprite-player__overrides"
-          aria-label="Surcharges FPS par image"
+          aria-label="Surcharges de Frame Time"
         >
-          <h2 className="sprite-player__overrides-title">Surcharges FPS</h2>
+          <h2 className="sprite-player__overrides-title">Surcharges de durée</h2>
           <ul className="sprite-player__overrides-list">
-            {overrideEntries.map(({ index, fps: overrideFps }) => (
+            {overrideEntries.map(({ index, frameCount }) => (
               <li key={index}>
                 <button
                   type="button"
@@ -651,7 +803,9 @@ export default function SpritePlayer() {
                   <span className="sprite-player__overrides-name">
                     {getFrameLabel(index, config, appendEmptyFrame)}
                   </span>
-                  <span className="sprite-player__overrides-value">{overrideFps} FPS</span>
+                  <span className="sprite-player__overrides-value">
+                    {frameCount} frame{frameCount > 1 ? 's' : ''}
+                  </span>
                 </button>
               </li>
             ))}
@@ -659,7 +813,7 @@ export default function SpritePlayer() {
           <button
             type="button"
             className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--reset-overrides"
-            onClick={resetAllFrameFpsOverrides}
+            onClick={resetAllFramesPerImageOverrides}
           >
             Réinitialiser toutes les surcharges
           </button>
