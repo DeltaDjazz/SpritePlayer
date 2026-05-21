@@ -105,6 +105,26 @@
   pointer-events: auto;
 }
 
+.sprite-player__config-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.sprite-player__config-row .sprite-player__fieldset {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: min(100%, 12rem);
+}
+
+.sprite-player__config-row .sprite-player__field--frames {
+  margin-bottom: 0;
+  flex: 0 1 7.5rem;
+  min-width: 6.5rem;
+}
+
 .sprite-player__fieldset {
   margin: 0 0 1rem;
   padding: 0;
@@ -247,7 +267,7 @@
 
 .sprite-player__input {
   width: 100%;
-  padding: 0.5rem 0.65rem;
+  padding: 0.2rem 0.65rem;
   font-size: 0.9rem;
   color: var(--text);
   background: var(--bg);

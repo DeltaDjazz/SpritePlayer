@@ -120,7 +120,7 @@ export default function SpritePlayer() {
   const [imageSrc, setImageSrc] = useState(null);
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
   const [orientation, setOrientation] = useState('vertical');
-  const [framesInput, setFramesInput] = useState('8');
+  const [framesInput, setFramesInput] = useState('6');
   const [fps, setFps] = useState(12);
   const [config, setConfig] = useState(null);
   const [frameIndex, setFrameIndex] = useState(0);
@@ -433,6 +433,129 @@ export default function SpritePlayer() {
 
       {error && <p className="sprite-player__error" role="alert">{error}</p>}
 
+      <div className="sprite-player__grid">
+        <section className="sprite-player__panel sprite-player__panel--config">
+          <h2 className="sprite-player__panel-title">Feuille de sprites</h2>
+
+          <div className="sprite-player__config-row">
+            <fieldset className="sprite-player__fieldset">
+              <legend className="sprite-player__legend">Orientation</legend>
+              <div className="sprite-player__orientation">
+                <label className="sprite-player__radio">
+                  <input
+                    type="radio"
+                    name="sprite-orientation"
+                    value="horizontal"
+                    checked={orientation === 'horizontal'}
+                    onChange={() => setOrientation('horizontal')}
+                  />
+                  <span>Horizontale ➡️</span>
+                </label>
+                <label className="sprite-player__radio">
+                  <input
+                    type="radio"
+                    name="sprite-orientation"
+                    value="vertical"
+                    checked={orientation === 'vertical'}
+                    onChange={() => setOrientation('vertical')}
+                  />
+                  <span>Verticale ⬇️</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <label className="sprite-player__field sprite-player__field--frames">
+              <span className="sprite-player__label">Nombre d&apos;images</span>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                className="sprite-player__input"
+                value={framesInput}
+                onChange={(e) => setFramesInput(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <button type="button" className="sprite-player__btn sprite-player__btn--primary" onClick={handleValidate}>
+            Valider &amp; Lancer
+          </button>
+        </section>
+
+        <section className="sprite-player__panel sprite-player__panel--speed">
+          <h2 className="sprite-player__panel-title">Vitesse</h2>
+          <label className="sprite-player__field sprite-player__field--slider">
+            <span className="sprite-player__label">
+              FPS : <strong className="sprite-player__fps-value">{fps}</strong>
+            </span>
+            <input
+              type="range"
+              min={1}
+              max={60}
+              step={1}
+              value={fps}
+              onChange={(e) => setFps(Number(e.target.value))}
+              className="sprite-player__range"
+            />
+            <div className="sprite-player__range-ticks" aria-hidden>
+              <span>1</span>
+              <span>60</span>
+            </div>
+          </label>
+          <label className="sprite-player__checkbox">
+            <input
+              type="checkbox"
+              checked={appendEmptyFrame}
+              onChange={handleAppendEmptyFrameChange}
+              disabled={!config}
+            />
+            <span>Image vide en fin d&apos;animation</span>
+          </label>
+          {appendEmptyFrame && (
+            <div className="sprite-player__empty-bg">
+              <label className="sprite-player__checkbox sprite-player__checkbox--nested">
+                <input
+                  type="checkbox"
+                  checked={emptyFrameUseBgColor}
+                  onChange={(e) => setEmptyFrameUseBgColor(e.target.checked)}
+                />
+                <span>Couleur de fond personnalisée</span>
+              </label>
+              <div className="sprite-player__color-row">
+              <input
+                type="color"
+                value={emptyFrameBgColor}
+                onChange={handleEmptyFrameBgColorChange}
+                className="sprite-player__color-input"
+                disabled={!emptyFrameUseBgColor}
+                aria-label="Couleur de fond de l’image vide"
+              />
+              <button
+                type="button"
+                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                onClick={handleEmptyFrameEyedropper}
+                disabled={!emptyFrameUseBgColor}
+                title="Pipette : prélever une couleur à l’écran"
+                aria-label="Pipette : prélever une couleur à l’écran"
+              >
+                <IconEyedropper />
+              </button>
+              <button
+                type="button"
+                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                onClick={() => setEmptyFrameUseBgColor(false)}
+                disabled={!emptyFrameUseBgColor}
+                title="Fond transparent"
+                aria-label="Fond transparent"
+              >
+                <IconTransparent />
+              </button>
+            </div>
+            </div>
+          )}
+        </section>
+      </div>
+
       <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
         <div
           className={`sprite-player__preview${isDragging ? ' sprite-player__preview--dragging' : ''}${!imageSrc ? ' sprite-player__preview--empty' : ''}`}
@@ -598,127 +721,6 @@ export default function SpritePlayer() {
           </div>
         )}
       </section>
-
-      <div className="sprite-player__grid">
-        <section className="sprite-player__panel sprite-player__panel--config">
-          <h2 className="sprite-player__panel-title">Feuille de sprites</h2>
-
-          <fieldset className="sprite-player__fieldset">
-            <legend className="sprite-player__legend">Orientation</legend>
-            <div className="sprite-player__orientation">
-              <label className="sprite-player__radio">
-                <input
-                  type="radio"
-                  name="sprite-orientation"
-                  value="horizontal"
-                  checked={orientation === 'horizontal'}
-                  onChange={() => setOrientation('horizontal')}
-                />
-                <span>Horizontale ➡️</span>
-              </label>
-              <label className="sprite-player__radio">
-                <input
-                  type="radio"
-                  name="sprite-orientation"
-                  value="vertical"
-                  checked={orientation === 'vertical'}
-                  onChange={() => setOrientation('vertical')}
-                />
-                <span>Verticale ⬇️</span>
-              </label>
-            </div>
-          </fieldset>
-
-          <label className="sprite-player__field">
-            <span className="sprite-player__label">Nombre d&apos;images (frames)</span>
-            <input
-              type="number"
-              min={1}
-              step={1}
-              className="sprite-player__input"
-              value={framesInput}
-              onChange={(e) => setFramesInput(e.target.value)}
-            />
-          </label>
-
-          <button type="button" className="sprite-player__btn sprite-player__btn--primary" onClick={handleValidate}>
-            Valider &amp; Lancer
-          </button>
-        </section>
-
-        <section className="sprite-player__panel sprite-player__panel--speed">
-          <h2 className="sprite-player__panel-title">Vitesse</h2>
-          <label className="sprite-player__field sprite-player__field--slider">
-            <span className="sprite-player__label">
-              FPS : <strong className="sprite-player__fps-value">{fps}</strong>
-            </span>
-            <input
-              type="range"
-              min={1}
-              max={60}
-              step={1}
-              value={fps}
-              onChange={(e) => setFps(Number(e.target.value))}
-              className="sprite-player__range"
-            />
-            <div className="sprite-player__range-ticks" aria-hidden>
-              <span>1</span>
-              <span>60</span>
-            </div>
-          </label>
-          <label className="sprite-player__checkbox">
-            <input
-              type="checkbox"
-              checked={appendEmptyFrame}
-              onChange={handleAppendEmptyFrameChange}
-              disabled={!config}
-            />
-            <span>Image vide en fin d&apos;animation</span>
-          </label>
-          {appendEmptyFrame && (
-            <div className="sprite-player__empty-bg">
-              <label className="sprite-player__checkbox sprite-player__checkbox--nested">
-                <input
-                  type="checkbox"
-                  checked={emptyFrameUseBgColor}
-                  onChange={(e) => setEmptyFrameUseBgColor(e.target.checked)}
-                />
-                <span>Couleur de fond personnalisée</span>
-              </label>
-              <div className="sprite-player__color-row">
-              <input
-                type="color"
-                value={emptyFrameBgColor}
-                onChange={handleEmptyFrameBgColorChange}
-                className="sprite-player__color-input"
-                disabled={!emptyFrameUseBgColor}
-                aria-label="Couleur de fond de l’image vide"
-              />
-              <button
-                type="button"
-                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
-                onClick={handleEmptyFrameEyedropper}
-                disabled={!emptyFrameUseBgColor}
-                title="Pipette : prélever une couleur à l’écran"
-                aria-label="Pipette : prélever une couleur à l’écran"
-              >
-                <IconEyedropper />
-              </button>
-              <button
-                type="button"
-                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
-                onClick={() => setEmptyFrameUseBgColor(false)}
-                disabled={!emptyFrameUseBgColor}
-                title="Fond transparent"
-                aria-label="Fond transparent"
-              >
-                <IconTransparent />
-              </button>
-            </div>
-            </div>
-          )}
-        </section>
-      </div>
 
       {config && overrideEntries.length > 0 && (
         <section
