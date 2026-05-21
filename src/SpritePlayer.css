@@ -125,6 +125,66 @@
   min-width: 6.5rem;
 }
 
+.sprite-player__speed-row {
+  display: grid;
+  grid-template-columns: 16.5rem auto;
+  grid-template-areas:
+    'fps-label frame-label'
+    'fps-range frame-controls'
+    'fps-ticks .';
+  column-gap: 1.25rem;
+  row-gap: 0.35rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.sprite-player__speed-fps-label {
+  grid-area: fps-label;
+}
+
+.sprite-player__speed-frame-label {
+  grid-area: frame-label;
+}
+
+.sprite-player__speed-fps-range {
+  grid-area: fps-range;
+  width: 100%;
+  margin: 0;
+  align-self: center;
+}
+
+.sprite-player__speed-fps-ticks {
+  grid-area: fps-ticks;
+}
+
+.sprite-player__frame-time-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+}
+
+.sprite-player__speed-row .sprite-player__frame-time-controls {
+  grid-area: frame-controls;
+  align-self: center;
+}
+
+.sprite-player__input--frame-time {
+  width: 3.25rem;
+  min-width: 3rem;
+  padding: 0.4rem 0.4rem;
+  text-align: center;
+}
+
+.sprite-player__frame-time-hint {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  line-height: 1;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .sprite-player__fieldset {
   margin: 0 0 1rem;
   padding: 0;
@@ -354,7 +414,7 @@
   white-space: nowrap;
 }
 
-.sprite-player__frame-fps-override {
+.sprite-player__frame-frames-override {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -364,9 +424,20 @@
   cursor: pointer;
 }
 
-.sprite-player__frame-fps-override-label {
+.sprite-player__frame-frames-override-label {
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+.sprite-player__frame-frames-override-hint {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.sprite-player__input--compact {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8125rem;
 }
 
 .sprite-player__range--compact {
