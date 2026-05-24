@@ -725,17 +725,46 @@ export default function SpritePlayer() {
                       ({currentDurationSec} s)
                     </span>
                   </span>
-                  <input
-                    type="number"
-                    min={FRAMES_PER_IMAGE_MIN}
-                    max={FRAMES_PER_IMAGE_MAX}
-                    step={1}
-                    value={currentFramesPerImage}
-                    onChange={handleFrameFramesPerImageOverrideChange}
-                    onClick={(e) => e.stopPropagation()}
-                    className="sprite-player__input sprite-player__input--compact"
-                    aria-label={`Temps par image en frames de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <button
+                      type="button"
+                      className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                      style={{ minWidth: '1.8rem', padding: 0 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const value = Math.max(FRAMES_PER_IMAGE_MIN, currentFramesPerImage - 1);
+                        handleFrameFramesPerImageOverrideChange({ target: { value } });
+                      }}
+                      aria-label="Diminuer Frame Time"
+                    >
+                      –
+                    </button>
+                    <input
+                      type="number"
+                      min={FRAMES_PER_IMAGE_MIN}
+                      max={FRAMES_PER_IMAGE_MAX}
+                      step={1}
+                      value={currentFramesPerImage}
+                      onChange={handleFrameFramesPerImageOverrideChange}
+                      onClick={(e) => e.stopPropagation()}
+                      className="sprite-player__input sprite-player__input--compact"
+                      aria-label={`Temps par image en frames de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
+                      style={{ width: '3.2rem', textAlign: 'center' }}
+                    />
+                    <button
+                      type="button"
+                      className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
+                      style={{ minWidth: '1.8rem', padding: 0 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const value = Math.min(FRAMES_PER_IMAGE_MAX, currentFramesPerImage + 1);
+                        handleFrameFramesPerImageOverrideChange({ target: { value } });
+                      }}
+                      aria-label="Augmenter Frame Time"
+                    >
+                      +
+                    </button>
+                  </div>
                 </label>
               )}
             </div>
