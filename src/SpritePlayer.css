@@ -604,6 +604,14 @@
   pointer-events: none;
 }
 
+/* Variante pour l'affichage en haut à droite */
+.sprite-player__preview-meta--topright {
+  right: 0.65rem;
+  top: 0.5rem;
+  left: auto;
+  bottom: auto;
+}
+
 .sprite-player__preview-sheet {
   max-width: 100%;
   max-height: min(360px, 50vh);

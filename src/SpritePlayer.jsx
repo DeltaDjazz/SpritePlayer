@@ -635,6 +635,12 @@ export default function SpritePlayer() {
               Relâchez pour importer
             </div>
           )}
+          {/* Affichage dimensions d'un sprite individuel en haut à droite */}
+          {config && (
+            <p className="sprite-player__preview-meta sprite-player__preview-meta--topright">
+              {Math.round(config.frameW)} × {Math.round(config.frameH)} px
+            </p>
+          )}
           {config && frameBoxStyle ? (
             isEmptyFrame ? (
               <div
