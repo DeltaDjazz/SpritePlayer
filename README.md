@@ -1,6 +1,37 @@
 # SpritePlayer
 
+🌐 **Site déployé :** [https://deltadjazz.github.io/SpritePlayer/](https://deltadjazz.github.io/SpritePlayer/)
+
 Petit outil web pour prévisualiser une **sprite sheet** (PNG ou JPEG) en **boucle**, comme un GIF animé. Tout s’exécute **dans le navigateur** : aucun serveur ni upload de fichiers n’est requis.
+
+## Déploiement
+
+Deux méthodes sont disponibles pour publier l’application sur GitHub Pages.
+
+### a) Déploiement via GitHub Actions (manuel)
+
+1. Ouvre le dépôt sur GitHub.
+2. Va dans l’onglet **Actions**.
+3. Sélectionne le workflow **Deploy to GitHub Pages**.
+4. Clique sur **Run workflow**, choisis la branche à déployer, puis confirme.
+
+Le workflow build le projet avec Vite et le déploie via l’action officielle GitHub Pages.
+
+> **Prérequis côté dépôt :** dans *Settings → Pages*, choisis **GitHub Actions** comme source de déploiement.
+
+### b) Déploiement local (`npm run deploy`)
+
+Depuis la branche locale courante :
+
+```bash
+npm run deploy
+```
+
+Cette commande :
+1. lance automatiquement `npm run build` (via le script `predeploy`) ;
+2. publie le contenu du dossier `dist/` sur la branche `gh-pages` grâce au package `gh-pages`.
+
+Le site sera ensuite accessible à l’adresse ci-dessus (après activation éventuelle de la branche `gh-pages` dans *Settings → Pages* si tu utilises uniquement cette méthode).
 
 ## Fonctionnalités
 
@@ -28,11 +59,12 @@ npm install
 
 ## Scripts
 
-| Commande        | Description                          |
-|-----------------|--------------------------------------|
-| `npm run dev`   | Serveur de développement (Vite + HMR)|
-| `npm run build` | Build de production dans `dist/`    |
-| `npm run preview` | Sert le build localement pour test |
+| Commande          | Description                                              |
+|-------------------|----------------------------------------------------------|
+| `npm run dev`     | Serveur de développement (Vite + HMR)                    |
+| `npm run build`   | Build de production dans `dist/`                         |
+| `npm run preview` | Sert le build localement pour test                       |
+| `npm run deploy`  | Build puis déploiement de la branche courante sur Pages  |
 
 Après `npm run dev`, ouvre l’URL affichée (souvent `http://localhost:5173`).
 
@@ -49,9 +81,11 @@ Après `npm run dev`, ouvre l’URL affichée (souvent `http://localhost:5173`).
 
 ```
 SpritePlayer/
+├── .github/workflows/
+│   └── deploy.yml        # Workflow GitHub Pages (manuel)
 ├── index.html
 ├── package.json
-├── vite.config.js
+├── vite.config.js        # base: '/SpritePlayer/' pour GitHub Pages
 ├── README.md
 └── src/
     ├── main.jsx          # Point d’entrée React
