@@ -1,7 +1,7 @@
 .sprite-player {
   --bg: #0f1114;
   --surface: #1a1d23;
-  --surface-hover: #22262e;
+  --surface-hover: #485060;
   --border: #2a2f38;
   --text: #e8eaed;
   --muted: #9aa0a6;
@@ -602,6 +602,14 @@
   background: rgba(15, 17, 20, 0.75);
   border-radius: 4px;
   pointer-events: none;
+}
+
+/* Variante pour l'affichage en haut à droite */
+.sprite-player__preview-meta--topright {
+  right: 0.65rem;
+  top: 0.5rem;
+  left: auto;
+  bottom: auto;
 }
 
 .sprite-player__preview-sheet {
