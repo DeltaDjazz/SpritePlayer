@@ -841,7 +841,7 @@ export default function SpritePlayer() {
           >
             <div className="flex min-w-[min(100%,220px)] flex-1 flex-wrap items-end gap-x-5 gap-y-2.5">
               <span
-                className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium tabular-nums text-foreground"
+                className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-xs font-medium tabular-nums text-muted-foreground"
                 aria-live="polite"
               >
                 {isEmptyFrame
@@ -861,7 +861,7 @@ export default function SpritePlayer() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      className={cx(btnSecondary, 'min-w-[1.8rem] px-0 py-1')}
+                      className={cx(btnSecondary, 'min-w-[1.8rem] bg-muted px-0 py-1')}
                       onClick={(e) => {
                         e.stopPropagation();
                         const value = Math.max(FRAMES_PER_IMAGE_MIN, currentFramesPerImage - 1);
@@ -884,7 +884,7 @@ export default function SpritePlayer() {
                     />
                     <button
                       type="button"
-                      className={cx(btnSecondary, 'min-w-[1.8rem] px-0 py-1')}
+                      className={cx(btnSecondary, 'min-w-[1.8rem] bg-muted px-0 py-1')}
                       onClick={(e) => {
                         e.stopPropagation();
                         const value = Math.min(FRAMES_PER_IMAGE_MAX, currentFramesPerImage + 1);
