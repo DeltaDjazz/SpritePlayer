@@ -520,7 +520,7 @@ export default function SpritePlayer() {
       )}
 
       <div className="mb-4 grid gap-4 md:grid-cols-2">
-        <section className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+        <section className="sp-panel p-4">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Feuille de sprites
           </h2>
@@ -572,7 +572,7 @@ export default function SpritePlayer() {
           </button>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+        <section className="sp-panel p-4">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Vitesse
           </h2>
@@ -673,7 +673,7 @@ export default function SpritePlayer() {
       </div>
 
       <section
-        className="mb-4 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]"
+        className="sp-panel mb-4 overflow-hidden"
         aria-label="Aperçu animation"
       >
         <div
@@ -955,7 +955,7 @@ export default function SpritePlayer() {
 
       {config && overrideEntries.length > 0 && (
         <section
-          className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]"
+          className="sp-panel p-4"
           aria-label="Surcharges de Frame Time"
         >
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
