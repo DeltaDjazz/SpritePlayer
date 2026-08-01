@@ -128,12 +128,55 @@ function IconTransportEnd() {
   );
 }
 
+function IconSpriteSheet() {
+  return (
+    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="4" width="7" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="14" y="4" width="7" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="3" y="13" width="7" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="14" y="13" width="7" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function IconSpeed() {
+  return (
+    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 20a8 8 0 1 0-8-8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 12l4.2-4.2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SectionTitle({ icon, children }) {
+  return (
+    <div className="mb-4">
+      <h2 className="m-0 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+        {icon}
+        <span>{children}</span>
+      </h2>
+      <hr className="sp-section-hr" />
+    </div>
+  );
+}
+
 const btnBase =
   'inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-45';
 
 const btnPrimary = cx(
   btnBase,
-  'border-primary bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:border-primary-hover hover:bg-primary-hover'
+  'border-transparent bg-[linear-gradient(135deg,#fbbd2e_0%,#f59e0b_48%,#ea580c_100%)] text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-105'
 );
 
 const btnSecondary = cx(
@@ -494,19 +537,22 @@ export default function SpritePlayer() {
 
   return (
     <div
-      className="mx-auto box-border min-h-screen max-w-[960px] px-5 py-6 pb-8 text-foreground sm:px-6"
+      className="box-border min-h-screen text-foreground"
       role="region"
       aria-label="Lecteur de sprite sheet"
     >
-      <header className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-          SpritePlayer
-        </h1>
-        <p className="m-0 text-sm text-muted-foreground">
-          Aperçu en boucle d&apos;une feuille de sprites (PNG / JPEG)
-        </p>
+      <header className="w-full bg-primary px-5 py-3 text-primary-foreground sm:px-6">
+        <div className="mx-auto flex max-w-[960px] flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="font-display text-xl font-bold tracking-tight text-primary-foreground sm:text-2xl">
+            SpritePlayer
+          </h1>
+          <p className="m-0 text-sm text-primary-foreground/85">
+            Aperçu en boucle d&apos;une feuille de sprites (PNG / JPEG)
+          </p>
+        </div>
       </header>
 
+      <div className="mx-auto max-w-[960px] px-5 py-5 pb-8 sm:px-6">
       {error && (
         <p
           className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger"
@@ -518,9 +564,7 @@ export default function SpritePlayer() {
 
       <div className="mb-4 grid gap-4 md:grid-cols-2">
         <section className="sp-panel p-5 sm:p-6">
-          <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
-            Feuille de sprites
-          </h2>
+          <SectionTitle icon={<IconSpriteSheet />}>Feuille de sprites</SectionTitle>
 
           <div className="mb-4 grid gap-4 sm:grid-cols-[1.2fr_0.8fr]">
             <fieldset className="min-w-0 border-0 p-0">
@@ -570,9 +614,7 @@ export default function SpritePlayer() {
         </section>
 
         <section className="sp-panel p-5 sm:p-6">
-          <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
-            Vitesse
-          </h2>
+          <SectionTitle icon={<IconSpeed />}>Vitesse</SectionTitle>
           <div className="mb-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5">
             <span className="text-sm font-medium text-muted-foreground">
               FPS : <strong className="font-bold tabular-nums text-primary">{fps}</strong>
@@ -1005,6 +1047,7 @@ export default function SpritePlayer() {
           onLoad={handleImageLoad}
         />
       )}
+      </div>
     </div>
   );
 }
