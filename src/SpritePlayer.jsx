@@ -498,11 +498,11 @@ export default function SpritePlayer() {
       role="region"
       aria-label="Lecteur de sprite sheet"
     >
-      <header className="mb-6">
-        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+      <header className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h1 className="font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
           SpritePlayer
         </h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+        <p className="m-0 text-sm text-muted-foreground">
           Aperçu en boucle d&apos;une feuille de sprites (PNG / JPEG)
         </p>
       </header>
