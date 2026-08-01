@@ -387,6 +387,108 @@
   border-color: var(--accent-hover);
 }
 
+.sprite-player__timeline {
+  border-top: 1px solid #1f1f1f;
+  background: #1a2433;
+  padding: 0.55rem 0.75rem;
+}
+
+.sprite-player__timeline-track {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.sprite-player__timeline-tick {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  background: #2f2f2f;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.sprite-player__timeline-tick:hover:not(:disabled) {
+  background: #3a3a3a;
+  border-color: #555;
+  color: var(--text);
+}
+
+.sprite-player__timeline-tick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sprite-player__timeline-tick--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.sprite-player__timeline-tick--active:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #fff;
+}
+
+.sprite-player__timeline-tick--empty {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.sprite-player__timeline-tick--empty.sprite-player__timeline-tick--active {
+  border-style: solid;
+  color: #fff;
+}
+
+.sprite-player__timeline-tick-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.sprite-player__timeline-tick--active .sprite-player__timeline-tick-dot {
+  background: #fde68a;
+}
+
+.sprite-player__timeline--playing .sprite-player__timeline-tick:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.sprite-player__timeline--playing .sprite-player__timeline-tick--active:disabled {
+  opacity: 1;
+}
+
+.sprite-player__timeline-tick-label {
+  pointer-events: none;
+}
+
 .sprite-player__transport {
   display: flex;
   flex-wrap: wrap;

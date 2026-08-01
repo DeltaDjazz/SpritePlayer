@@ -146,6 +146,7 @@ export default function SpritePlayer() {
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
   const fileInputRef = useRef(null);
+  const timelineActiveTickRef = useRef(null);
 
   const loadImageFile = useCallback((file) => {
     if (!isImageFile(file)) {
@@ -403,6 +404,15 @@ export default function SpritePlayer() {
     playbackFrameCount,
     getEffectiveDurationMs,
   ]);
+
+  useEffect(() => {
+    if (!config) return;
+    timelineActiveTickRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'nearest',
+      block: 'nearest',
+    });
+  }, [config, frameIndex]);
 
   const backgroundPosition = useMemo(() => {
     if (!config || isEmptyFrame) return '0 0';
@@ -704,6 +714,57 @@ export default function SpritePlayer() {
             aria-hidden
           />
         </div>
+        {config && (
+          <nav
+            className={`sprite-player__timeline${isPaused ? '' : ' sprite-player__timeline--playing'}`}
+            aria-label="Timeline des images"
+          >
+            <div className="sprite-player__timeline-track" role="list">
+              {Array.from({ length: playbackFrameCount }, (_, index) => {
+                const isActive = index === frameIndex;
+                const isEmptyTick = appendEmptyFrame && index >= config.frames;
+                const hasOverride = framesPerImageOverrides[index] != null;
+                const label = isEmptyTick ? 'V' : String(index + 1);
+                const fullLabel = getFrameLabel(index, config, appendEmptyFrame);
+
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    role="listitem"
+                    ref={isActive ? timelineActiveTickRef : null}
+                    className={[
+                      'sprite-player__timeline-tick',
+                      isActive ? 'sprite-player__timeline-tick--active' : '',
+                      isEmptyTick ? 'sprite-player__timeline-tick--empty' : '',
+                      hasOverride ? 'sprite-player__timeline-tick--override' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    disabled={!isPaused}
+                    aria-current={isActive ? 'true' : undefined}
+                    aria-label={
+                      isPaused
+                        ? `Aller à ${fullLabel}`
+                        : `${fullLabel}${isActive ? ' (en lecture)' : ''}`
+                    }
+                    title={
+                      isPaused
+                        ? `Afficher ${fullLabel}`
+                        : 'Mettez en pause pour sélectionner une image'
+                    }
+                    onClick={() => goToFrameAndPause(index)}
+                  >
+                    <span className="sprite-player__timeline-tick-label">{label}</span>
+                    {hasOverride && (
+                      <span className="sprite-player__timeline-tick-dot" aria-hidden />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        )}
         {config && (
           <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
             <div className="sprite-player__transport-status">
