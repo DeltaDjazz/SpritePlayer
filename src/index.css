@@ -14,7 +14,7 @@
   --color-primary: hsl(42 98% 55%);
   --color-primary-foreground: hsl(222 60% 5%);
   --color-primary-hover: hsl(38 96% 48%);
-  --color-muted: hsl(217 28% 16%);
+  --color-muted: hsl(215.7 30.4% 27.1%);
   --color-muted-foreground: hsl(215 16% 68%);
   --color-border: rgb(255 255 255 / 0.1);
   --color-input: rgb(15 23 42 / 0.85);
@@ -64,6 +64,12 @@
     background-attachment: fixed;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .bg-muted {
+    background-color: hsl(215.7, 30.4%, 27.1%);
   }
 }
 

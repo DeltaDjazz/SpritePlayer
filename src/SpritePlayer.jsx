@@ -494,20 +494,19 @@ export default function SpritePlayer() {
 
   return (
     <div
-      className="mx-auto box-border flex min-h-screen max-w-[1180px] flex-col gap-5 px-5 py-5 text-foreground sm:px-6 lg:flex-row lg:items-start lg:gap-6 lg:py-6"
+      className="mx-auto box-border min-h-screen max-w-[960px] px-5 py-6 pb-8 text-foreground sm:px-6"
       role="region"
       aria-label="Lecteur de sprite sheet"
     >
-      <header className="shrink-0 lg:sticky lg:top-6 lg:w-44 lg:pt-1 xl:w-52">
-        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-[2.35rem] lg:leading-[1.05]">
+      <header className="mb-6">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           SpritePlayer
         </h1>
-        <p className="mt-2 max-w-xs text-sm text-muted-foreground lg:mt-3 lg:text-[0.9rem] lg:leading-relaxed">
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
           Aperçu en boucle d&apos;une feuille de sprites (PNG / JPEG)
         </p>
       </header>
 
-      <div className="min-w-0 flex-1">
       {error && (
         <p
           className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger"
@@ -1000,7 +999,6 @@ export default function SpritePlayer() {
           onLoad={handleImageLoad}
         />
       )}
-      </div>
     </div>
   );
 }
