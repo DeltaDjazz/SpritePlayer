@@ -861,7 +861,10 @@ export default function SpritePlayer() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      className={cx(btnSecondary, 'min-w-[1.8rem] bg-muted px-0 py-1')}
+                      className={cx(
+                        btnBase,
+                        'min-w-[1.8rem] border-border bg-muted px-0 py-1 text-foreground hover:border-primary/50 hover:bg-muted/80'
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         const value = Math.max(FRAMES_PER_IMAGE_MIN, currentFramesPerImage - 1);
@@ -884,7 +887,10 @@ export default function SpritePlayer() {
                     />
                     <button
                       type="button"
-                      className={cx(btnSecondary, 'min-w-[1.8rem] bg-muted px-0 py-1')}
+                      className={cx(
+                        btnBase,
+                        'min-w-[1.8rem] border-border bg-muted px-0 py-1 text-foreground hover:border-primary/50 hover:bg-muted/80'
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         const value = Math.min(FRAMES_PER_IMAGE_MAX, currentFramesPerImage + 1);
