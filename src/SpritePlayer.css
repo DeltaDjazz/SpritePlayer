@@ -389,13 +389,14 @@
 
 .sprite-player__timeline {
   border-top: 1px solid #1f1f1f;
-  background: #232323;
+  background: #1a2433;
   padding: 0.55rem 0.75rem;
 }
 
 .sprite-player__timeline-track {
   display: flex;
   flex-wrap: nowrap;
+  justify-content: center;
   gap: 0.35rem;
   overflow-x: auto;
   padding-bottom: 0.15rem;
