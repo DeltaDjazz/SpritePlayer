@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import './SpritePlayer.css';
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 const FPS_MIN = 1;
@@ -34,10 +33,14 @@ function detectOrientationFromSize(width, height) {
   return 'vertical';
 }
 
+function cx(...parts) {
+  return parts.filter(Boolean).join(' ');
+}
+
 function IconEyedropper() {
   return (
     <svg
-      className="sprite-player__icon"
+      className="size-4"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -55,7 +58,7 @@ function IconEyedropper() {
 
 function IconTransparent() {
   return (
-    <svg className="sprite-player__icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-4" viewBox="0 0 24 24" aria-hidden>
       <rect x="3" y="3" width="8" height="8" fill="currentColor" opacity="0.35" />
       <rect x="13" y="3" width="8" height="8" fill="currentColor" opacity="0.55" />
       <rect x="3" y="13" width="8" height="8" fill="currentColor" opacity="0.55" />
@@ -72,7 +75,7 @@ function IconTransparent() {
 
 function IconTransportStart() {
   return (
-    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
       <rect x="5" y="6" width="2" height="12" fill="currentColor" />
       <path d="M17 6L11 12l6 6V6z" fill="currentColor" />
       <path d="M13 6L7 12l6 6V6z" fill="currentColor" />
@@ -82,7 +85,7 @@ function IconTransportStart() {
 
 function IconTransportPrev() {
   return (
-    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
       <rect x="5" y="6" width="2" height="12" fill="currentColor" />
       <path d="M17 6L11 12l6 6V6z" fill="currentColor" />
     </svg>
@@ -91,7 +94,7 @@ function IconTransportPrev() {
 
 function IconTransportPlay() {
   return (
-    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
       <path d="M8 6l10 6-10 6V6z" fill="currentColor" />
     </svg>
   );
@@ -99,7 +102,7 @@ function IconTransportPlay() {
 
 function IconTransportPause() {
   return (
-    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
       <rect x="7" y="6" width="3.5" height="12" fill="currentColor" />
       <rect x="13.5" y="6" width="3.5" height="12" fill="currentColor" />
     </svg>
@@ -108,7 +111,7 @@ function IconTransportPause() {
 
 function IconTransportNext() {
   return (
-    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
       <path d="M7 6l6 6-6 6V6z" fill="currentColor" />
       <rect x="17" y="6" width="2" height="12" fill="currentColor" />
     </svg>
@@ -117,13 +120,31 @@ function IconTransportNext() {
 
 function IconTransportEnd() {
   return (
-    <svg className="sprite-player__transport-icon" viewBox="0 0 24 24" aria-hidden>
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
       <path d="M7 6l6 6-6 6V6z" fill="currentColor" />
       <path d="M11 6l6 6-6 6V6z" fill="currentColor" />
       <rect x="17" y="6" width="2" height="12" fill="currentColor" />
     </svg>
   );
 }
+
+const btnBase =
+  'inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-45';
+
+const btnPrimary = cx(
+  btnBase,
+  'border-primary bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:border-primary-hover hover:bg-primary-hover'
+);
+
+const btnSecondary = cx(
+  btnBase,
+  'border-border bg-transparent text-foreground hover:border-primary/50 hover:bg-muted'
+);
+
+const btnIcon = 'min-w-9 px-0 py-2';
+
+const inputBase =
+  'w-full rounded-xl border border-border bg-input px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30';
 
 /**
  * Lecteur de sprite sheet en boucle (style GIF), sans backend.
@@ -472,72 +493,94 @@ export default function SpritePlayer() {
   }, [imageSrc, config, isEmptyFrame, frameBoxStyle, backgroundPosition]);
 
   return (
-    <div className="sprite-player" role="region" aria-label="Lecteur de sprite sheet">
-      <header className="sprite-player__header">
-        <h1 className="sprite-player__title">SpritePlayer</h1>
-        <p className="sprite-player__subtitle">
+    <div
+      className="mx-auto box-border min-h-screen max-w-[960px] px-5 py-6 pb-8 text-foreground sm:px-6"
+      role="region"
+      aria-label="Lecteur de sprite sheet"
+    >
+      <header className="mb-6">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          Sprite tools
+        </p>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          SpritePlayer
+        </h1>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
           Aperçu en boucle d&apos;une feuille de sprites (PNG / JPEG)
         </p>
       </header>
 
-      {error && <p className="sprite-player__error" role="alert">{error}</p>}
+      {error && (
+        <p
+          className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
 
-      <div className="sprite-player__grid">
-        <section className="sprite-player__panel sprite-player__panel--config">
-          <h2 className="sprite-player__panel-title">Feuille de sprites</h2>
+      <div className="mb-4 grid gap-4 md:grid-cols-2">
+        <section className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+          <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+            Feuille de sprites
+          </h2>
 
-          <div className="sprite-player__config-row">
-            <fieldset className="sprite-player__fieldset">
-              <legend className="sprite-player__legend">Orientation</legend>
-              <div className="sprite-player__orientation">
-                <label className="sprite-player__radio">
+          <div className="mb-4 grid gap-4 sm:grid-cols-[1.2fr_0.8fr]">
+            <fieldset className="min-w-0 border-0 p-0">
+              <legend className="mb-2 text-sm font-medium text-muted-foreground">Orientation</legend>
+              <div className="flex flex-wrap gap-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
                   <input
                     type="radio"
                     name="sprite-orientation"
                     value="horizontal"
                     checked={orientation === 'horizontal'}
                     onChange={() => setOrientation('horizontal')}
+                    className="accent-primary"
                   />
                   <span>Horizontale ➡️</span>
                 </label>
-                <label className="sprite-player__radio">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
                   <input
                     type="radio"
                     name="sprite-orientation"
                     value="vertical"
                     checked={orientation === 'vertical'}
                     onChange={() => setOrientation('vertical')}
+                    className="accent-primary"
                   />
                   <span>Verticale ⬇️</span>
                 </label>
               </div>
             </fieldset>
 
-            <label className="sprite-player__field sprite-player__field--frames">
-              <span className="sprite-player__label">Nombre d&apos;images</span>
+            <label className="flex min-w-0 flex-col gap-1.5">
+              <span className="text-sm font-medium text-muted-foreground">Nombre d&apos;images</span>
               <input
                 type="number"
                 min={1}
                 step={1}
-                className="sprite-player__input"
+                className={inputBase}
                 value={framesInput}
                 onChange={(e) => setFramesInput(e.target.value)}
               />
             </label>
           </div>
 
-          <button type="button" className="sprite-player__btn sprite-player__btn--primary" onClick={handleValidate}>
+          <button type="button" className={cx(btnPrimary, 'w-full sm:w-auto')} onClick={handleValidate}>
             Valider &amp; Lancer
           </button>
         </section>
 
-        <section className="sprite-player__panel sprite-player__panel--speed">
-          <h2 className="sprite-player__panel-title">Vitesse</h2>
-          <div className="sprite-player__speed-row">
-            <span className="sprite-player__label sprite-player__speed-fps-label">
-              FPS : <strong className="sprite-player__fps-value">{fps}</strong>
+        <section className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+          <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+            Vitesse
+          </h2>
+          <div className="mb-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5">
+            <span className="text-sm font-medium text-muted-foreground">
+              FPS : <strong className="font-bold tabular-nums text-primary">{fps}</strong>
             </span>
-            <span className="sprite-player__label sprite-player__speed-frame-label">Frame Time</span>
+            <span className="text-sm font-medium text-muted-foreground">Frame Time</span>
             <input
               type="range"
               min={FPS_MIN}
@@ -545,86 +588,101 @@ export default function SpritePlayer() {
               step={1}
               value={fps}
               onChange={handleFpsChange}
-              className="sprite-player__range sprite-player__speed-fps-range"
+              className="sp-range col-start-1"
               aria-label="Images par seconde"
             />
-            <div className="sprite-player__frame-time-controls">
+            <div className="col-start-2 row-start-2 flex items-center gap-2">
               <input
                 type="number"
                 min={FRAMES_PER_IMAGE_MIN}
                 max={FRAMES_PER_IMAGE_MAX}
                 step={1}
-                className="sprite-player__input sprite-player__input--frame-time"
+                className={cx(inputBase, 'w-20')}
                 value={framesPerImage}
                 onChange={handleFramesPerImageChange}
                 aria-label="Temps par image en nombre de frames pour toutes les images"
               />
-              <span className="sprite-player__frame-time-hint" aria-live="polite">
+              <span className="text-xs tabular-nums text-muted-foreground" aria-live="polite">
                 ={formatSecondsPerImage(framesPerImage, fps)}s
               </span>
             </div>
-            <div className="sprite-player__range-ticks sprite-player__speed-fps-ticks" aria-hidden>
+            <div className="col-span-1 flex justify-between text-[0.7rem] text-muted-foreground" aria-hidden>
               <span>{FPS_MIN}</span>
               <span>{FPS_MAX}</span>
             </div>
           </div>
-          <label className="sprite-player__checkbox">
+          <label
+            className={cx(
+              'mb-2 flex items-center gap-2 text-sm text-foreground',
+              !config ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+            )}
+          >
             <input
               type="checkbox"
               checked={appendEmptyFrame}
               onChange={handleAppendEmptyFrameChange}
               disabled={!config}
+              className="accent-primary"
             />
             <span>Image vide en fin d&apos;animation</span>
           </label>
           {appendEmptyFrame && (
-            <div className="sprite-player__empty-bg">
-              <label className="sprite-player__checkbox sprite-player__checkbox--nested">
+            <div className="ml-1 border-l border-border pl-3">
+              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-foreground">
                 <input
                   type="checkbox"
                   checked={emptyFrameUseBgColor}
                   onChange={(e) => setEmptyFrameUseBgColor(e.target.checked)}
+                  className="accent-primary"
                 />
                 <span>Couleur de fond personnalisée</span>
               </label>
-              <div className="sprite-player__color-row">
-              <input
-                type="color"
-                value={emptyFrameBgColor}
-                onChange={handleEmptyFrameBgColorChange}
-                className="sprite-player__color-input"
-                disabled={!emptyFrameUseBgColor}
-                aria-label="Couleur de fond de l’image vide"
-              />
-              <button
-                type="button"
-                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
-                onClick={handleEmptyFrameEyedropper}
-                disabled={!emptyFrameUseBgColor}
-                title="Pipette : prélever une couleur à l’écran"
-                aria-label="Pipette : prélever une couleur à l’écran"
-              >
-                <IconEyedropper />
-              </button>
-              <button
-                type="button"
-                className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
-                onClick={() => setEmptyFrameUseBgColor(false)}
-                disabled={!emptyFrameUseBgColor}
-                title="Fond transparent"
-                aria-label="Fond transparent"
-              >
-                <IconTransparent />
-              </button>
-            </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={emptyFrameBgColor}
+                  onChange={handleEmptyFrameBgColorChange}
+                  className="h-9 w-12 cursor-pointer rounded-lg border border-border bg-input p-1 disabled:cursor-not-allowed disabled:opacity-45"
+                  disabled={!emptyFrameUseBgColor}
+                  aria-label="Couleur de fond de l’image vide"
+                />
+                <button
+                  type="button"
+                  className={cx(btnSecondary, btnIcon)}
+                  onClick={handleEmptyFrameEyedropper}
+                  disabled={!emptyFrameUseBgColor}
+                  title="Pipette : prélever une couleur à l’écran"
+                  aria-label="Pipette : prélever une couleur à l’écran"
+                >
+                  <IconEyedropper />
+                </button>
+                <button
+                  type="button"
+                  className={cx(btnSecondary, btnIcon)}
+                  onClick={() => setEmptyFrameUseBgColor(false)}
+                  disabled={!emptyFrameUseBgColor}
+                  title="Fond transparent"
+                  aria-label="Fond transparent"
+                >
+                  <IconTransparent />
+                </button>
+              </div>
             </div>
           )}
         </section>
       </div>
 
-      <section className="sprite-player__preview-wrap" aria-label="Aperçu animation">
+      <section
+        className="mb-4 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]"
+        aria-label="Aperçu animation"
+      >
         <div
-          className={`sprite-player__preview${isDragging ? ' sprite-player__preview--dragging' : ''}${!imageSrc ? ' sprite-player__preview--empty' : ''}`}
+          className={cx(
+            'relative flex min-h-[220px] cursor-pointer items-center justify-center p-5 transition-[background,box-shadow]',
+            'bg-preview',
+            !imageSrc && 'rounded-xl border-2 border-dashed border-border bg-background hover:border-primary/40 hover:bg-muted/40',
+            isDragging && 'bg-primary/10 shadow-[inset_0_0_0_2px_var(--color-primary)]'
+          )}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -641,27 +699,29 @@ export default function SpritePlayer() {
           aria-label="Zone d’aperçu : glissez une image PNG ou JPEG, ou appuyez pour parcourir"
         >
           {isDragging && (
-            <div className="sprite-player__preview-overlay" aria-hidden>
+            <div
+              className="pointer-events-none absolute inset-0 z-2 flex items-center justify-center bg-primary/15 text-sm font-semibold text-foreground"
+              aria-hidden
+            >
               Relâchez pour importer
             </div>
           )}
-          {/* Affichage dimensions d'un sprite individuel en haut à droite */}
           {config && (
-            <p className="sprite-player__preview-meta sprite-player__preview-meta--topright">
+            <p className="pointer-events-none absolute top-2 right-2.5 m-0 rounded bg-background/75 px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
               {Math.round(config.frameW)} × {Math.round(config.frameH)} px
             </p>
           )}
           {config && frameBoxStyle ? (
             isEmptyFrame ? (
               <div
-                className="sprite-player__sprite sprite-player__sprite--empty"
+                className="sp-pixel shrink-0"
                 style={emptyFrameStyle}
                 aria-label="Image vide"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <div
-                className="sprite-player__sprite"
+                className="sp-pixel shrink-0"
                 style={previewStyle}
                 onClick={(e) => e.stopPropagation()}
               />
@@ -671,25 +731,25 @@ export default function SpritePlayer() {
               <img
                 src={imageSrc}
                 alt="Feuille de sprites importée"
-                className="sprite-player__preview-sheet"
+                className="sp-pixel max-h-[min(360px,50vh)] max-w-full object-contain"
                 onClick={(e) => e.stopPropagation()}
               />
-              <p className="sprite-player__placeholder sprite-player__placeholder--overlay">
+              <p className="absolute inset-x-4 bottom-10 m-0 text-center text-sm text-foreground/90">
                 Configurez les frames puis cliquez sur « Valider & Lancer ».
-                <span className="sprite-player__placeholder-hint">
+                <span className="mt-1 block text-xs text-muted-foreground">
                   Glissez une autre image pour remplacer
                 </span>
               </p>
             </>
           ) : (
-            <div className="sprite-player__placeholder">
-              <p className="sprite-player__placeholder-text">
+            <div className="text-center">
+              <p className="m-0 text-base font-semibold text-foreground">
                 {isDragging ? 'Relâchez pour importer' : 'Glissez une image ici'}
               </p>
-              <p className="sprite-player__placeholder-hint">PNG ou JPEG</p>
+              <p className="mt-1 text-sm text-muted-foreground">PNG ou JPEG</p>
               <button
                 type="button"
-                className="sprite-player__file-btn"
+                className={cx(btnPrimary, 'mt-4')}
                 onClick={(e) => {
                   e.stopPropagation();
                   fileInputRef.current?.click();
@@ -700,7 +760,7 @@ export default function SpritePlayer() {
             </div>
           )}
           {naturalSize.w > 0 && (
-            <p className="sprite-player__preview-meta">
+            <p className="pointer-events-none absolute right-2.5 bottom-2 m-0 rounded bg-background/75 px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
               {naturalSize.w} × {naturalSize.h} px
             </p>
           )}
@@ -708,7 +768,7 @@ export default function SpritePlayer() {
             ref={fileInputRef}
             type="file"
             accept="image/png,image/jpeg,.png,.jpg,.jpeg"
-            className="sprite-player__file-input"
+            className="sr-only"
             onChange={handleFileChange}
             tabIndex={-1}
             aria-hidden
@@ -716,10 +776,13 @@ export default function SpritePlayer() {
         </div>
         {config && (
           <nav
-            className={`sprite-player__timeline${isPaused ? '' : ' sprite-player__timeline--playing'}`}
+            className="border-t border-border bg-timeline px-3 py-2.5"
             aria-label="Timeline des images"
           >
-            <div className="sprite-player__timeline-track" role="list">
+            <div
+              className="flex flex-nowrap justify-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]"
+              role="list"
+            >
               {Array.from({ length: playbackFrameCount }, (_, index) => {
                 const isActive = index === frameIndex;
                 const isEmptyTick = appendEmptyFrame && index >= config.frames;
@@ -733,14 +796,16 @@ export default function SpritePlayer() {
                     type="button"
                     role="listitem"
                     ref={isActive ? timelineActiveTickRef : null}
-                    className={[
-                      'sprite-player__timeline-tick',
-                      isActive ? 'sprite-player__timeline-tick--active' : '',
-                      isEmptyTick ? 'sprite-player__timeline-tick--empty' : '',
-                      hasOverride ? 'sprite-player__timeline-tick--override' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                    className={cx(
+                      'relative inline-flex size-8 shrink-0 items-center justify-center rounded border text-xs font-semibold tabular-nums transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isActive
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-muted text-muted-foreground hover:border-primary/40 hover:bg-muted/80 hover:text-foreground',
+                      isEmptyTick && !isActive && 'border-dashed',
+                      !isPaused && 'cursor-not-allowed opacity-70',
+                      !isPaused && isActive && 'opacity-100'
+                    )}
                     disabled={!isPaused}
                     aria-current={isActive ? 'true' : undefined}
                     aria-label={
@@ -755,9 +820,15 @@ export default function SpritePlayer() {
                     }
                     onClick={() => goToFrameAndPause(index)}
                   >
-                    <span className="sprite-player__timeline-tick-label">{label}</span>
+                    <span className="pointer-events-none">{label}</span>
                     {hasOverride && (
-                      <span className="sprite-player__timeline-tick-dot" aria-hidden />
+                      <span
+                        className={cx(
+                          'absolute top-[3px] right-[3px] size-[5px] rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.35)]',
+                          isActive ? 'bg-primary-foreground' : 'bg-primary'
+                        )}
+                        aria-hidden
+                      />
                     )}
                   </button>
                 );
@@ -766,31 +837,34 @@ export default function SpritePlayer() {
           </nav>
         )}
         {config && (
-          <div className="sprite-player__transport" role="toolbar" aria-label="Contrôles de lecture">
-            <div className="sprite-player__transport-status">
-              <span className="sprite-player__frame-badge" aria-live="polite">
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-transport px-4 py-2.5"
+            role="toolbar"
+            aria-label="Contrôles de lecture"
+          >
+            <div className="flex min-w-[min(100%,220px)] flex-1 flex-wrap items-end gap-x-5 gap-y-2.5">
+              <span
+                className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium tabular-nums text-foreground"
+                aria-live="polite"
+              >
                 {isEmptyFrame
                   ? `Vide · ${playbackFrameCount} / ${playbackFrameCount}`
                   : `Image ${frameIndex + 1} / ${playbackFrameCount}`}
                 {isPaused ? ' · en pause' : ''}
               </span>
               {isPaused && (
-                <label className="sprite-player__frame-frames-override">
-                  <span className="sprite-player__frame-frames-override-label">
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                  <span>
                     Frame Time :{' '}
-                    <strong className="sprite-player__fps-value">
+                    <strong className="font-bold tabular-nums text-primary">
                       {currentFramesPerImage} frame{currentFramesPerImage > 1 ? 's' : ''}
-                    </strong>
-                    {' '}
-                    <span className="sprite-player__frame-frames-override-hint">
-                      ({currentDurationSec} s)
-                    </span>
+                    </strong>{' '}
+                    <span className="text-muted-foreground">({currentDurationSec} s)</span>
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
-                      style={{ minWidth: '1.8rem', padding: 0 }}
+                      className={cx(btnSecondary, 'min-w-[1.8rem] px-0 py-1')}
                       onClick={(e) => {
                         e.stopPropagation();
                         const value = Math.max(FRAMES_PER_IMAGE_MIN, currentFramesPerImage - 1);
@@ -808,14 +882,12 @@ export default function SpritePlayer() {
                       value={currentFramesPerImage}
                       onChange={handleFrameFramesPerImageOverrideChange}
                       onClick={(e) => e.stopPropagation()}
-                      className="sprite-player__input sprite-player__input--compact"
+                      className={cx(inputBase, 'w-[3.2rem] py-1 text-center')}
                       aria-label={`Temps par image en frames de ${getFrameLabel(frameIndex, config, appendEmptyFrame)}`}
-                      style={{ width: '3.2rem', textAlign: 'center' }}
                     />
                     <button
                       type="button"
-                      className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--icon"
-                      style={{ minWidth: '1.8rem', padding: 0 }}
+                      className={cx(btnSecondary, 'min-w-[1.8rem] px-0 py-1')}
                       onClick={(e) => {
                         e.stopPropagation();
                         const value = Math.min(FRAMES_PER_IMAGE_MAX, currentFramesPerImage + 1);
@@ -829,10 +901,10 @@ export default function SpritePlayer() {
                 </label>
               )}
             </div>
-            <div className="sprite-player__transport-bar">
+            <div className="flex overflow-hidden rounded-full border border-border bg-muted">
               <button
                 type="button"
-                className="sprite-player__transport-btn"
+                className="inline-flex size-10 items-center justify-center text-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 onClick={goToStart}
                 title="Première image"
                 aria-label="Première image"
@@ -841,7 +913,7 @@ export default function SpritePlayer() {
               </button>
               <button
                 type="button"
-                className="sprite-player__transport-btn"
+                className="inline-flex size-10 items-center justify-center text-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 onClick={goPrevFrame}
                 title="Image précédente"
                 aria-label="Image précédente"
@@ -850,7 +922,7 @@ export default function SpritePlayer() {
               </button>
               <button
                 type="button"
-                className="sprite-player__transport-btn sprite-player__transport-btn--play"
+                className="inline-flex size-10 items-center justify-center bg-primary text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 onClick={togglePause}
                 aria-pressed={!isPaused}
                 title={isPaused ? 'Lecture' : 'Pause'}
@@ -860,7 +932,7 @@ export default function SpritePlayer() {
               </button>
               <button
                 type="button"
-                className="sprite-player__transport-btn"
+                className="inline-flex size-10 items-center justify-center text-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 onClick={goNextFrame}
                 title="Image suivante"
                 aria-label="Image suivante"
@@ -869,7 +941,7 @@ export default function SpritePlayer() {
               </button>
               <button
                 type="button"
-                className="sprite-player__transport-btn"
+                className="inline-flex size-10 items-center justify-center text-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 onClick={goToEnd}
                 title="Dernière image"
                 aria-label="Dernière image"
@@ -883,23 +955,28 @@ export default function SpritePlayer() {
 
       {config && overrideEntries.length > 0 && (
         <section
-          className="sprite-player__overrides"
+          className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]"
           aria-label="Surcharges de Frame Time"
         >
-          <h2 className="sprite-player__overrides-title">Surcharges de durée</h2>
-          <ul className="sprite-player__overrides-list">
+          <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+            Surcharges de durée
+          </h2>
+          <ul className="m-0 mb-3 flex list-none flex-wrap gap-2 p-0">
             {overrideEntries.map(({ index, frameCount }) => (
               <li key={index}>
                 <button
                   type="button"
-                  className={`sprite-player__overrides-item${frameIndex === index && isPaused ? ' sprite-player__overrides-item--active' : ''}`}
+                  className={cx(
+                    'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+                    frameIndex === index && isPaused
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-muted text-foreground hover:border-primary/40'
+                  )}
                   onClick={() => goToFrameAndPause(index)}
                   title={`Afficher ${getFrameLabel(index, config, appendEmptyFrame)} et mettre en pause`}
                 >
-                  <span className="sprite-player__overrides-name">
-                    {getFrameLabel(index, config, appendEmptyFrame)}
-                  </span>
-                  <span className="sprite-player__overrides-value">
+                  <span>{getFrameLabel(index, config, appendEmptyFrame)}</span>
+                  <span className="tabular-nums opacity-80">
                     {frameCount} frame{frameCount > 1 ? 's' : ''}
                   </span>
                 </button>
@@ -908,7 +985,7 @@ export default function SpritePlayer() {
           </ul>
           <button
             type="button"
-            className="sprite-player__btn sprite-player__btn--secondary sprite-player__btn--reset-overrides"
+            className={btnSecondary}
             onClick={resetAllFramesPerImageOverrides}
           >
             Réinitialiser toutes les surcharges
@@ -921,7 +998,7 @@ export default function SpritePlayer() {
         <img
           src={imageSrc}
           alt=""
-          className="sprite-player__hidden-measure"
+          className="pointer-events-none absolute -left-[9999px] h-px w-px opacity-0"
           onLoad={handleImageLoad}
         />
       )}

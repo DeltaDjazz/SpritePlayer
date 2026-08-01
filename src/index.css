@@ -1,16 +1,102 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@import 'tailwindcss';
+
+/*
+  Tokens inspirés d’Alexium International (thème sombre + accent jaune).
+  Source : https://alexiuminternational.com/
+*/
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+
+  --color-background: hsl(222 70% 6%);
+  --color-foreground: hsl(200 20% 96%);
+  --color-card: hsl(220 50% 8%);
+  --color-card-foreground: hsl(200 20% 96%);
+  --color-primary: hsl(42 95% 58%);
+  --color-primary-foreground: hsl(222 60% 5%);
+  --color-primary-hover: hsl(38 92% 50%);
+  --color-muted: hsl(217 35% 13%);
+  --color-muted-foreground: hsl(215 16% 65%);
+  --color-border: hsl(217 35% 18%);
+  --color-input: hsl(217 35% 16%);
+  --color-ring: hsl(42 95% 58%);
+  --color-danger: hsl(0 84% 60%);
+  --color-preview: hsl(222 45% 8%);
+  --color-timeline: hsl(220 42% 11%);
+  --color-transport: hsl(220 40% 10%);
+
+  --radius-xl: 0.875rem;
+  --shadow-card: 0 1px 2px hsl(220 45% 10% / 0.2), 0 16px 40px -16px hsl(222 70% 4% / 0.55);
+  --shadow-glow: 0 0 40px hsl(42 95% 58% / 0.18);
 }
 
-html,
-body,
-#root {
-  margin: 0;
-  min-height: 100%;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(ellipse at top right, hsl(195 80% 22% / 0.35) 0%, transparent 45%),
+      radial-gradient(ellipse at bottom left, hsl(42 95% 40% / 0.08) 0%, transparent 40%),
+      linear-gradient(180deg, hsl(222 70% 6%) 0%, hsl(222 65% 5%) 100%);
+    background-attachment: fixed;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
-body {
-  background: #0f1114;
+@layer components {
+  .sp-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 0.35rem;
+    border-radius: 9999px;
+    background: hsl(217 35% 18%);
+    outline: none;
+  }
+
+  .sp-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary-foreground);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px hsl(42 95% 58% / 0.2);
+  }
+
+  .sp-range::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary-foreground);
+    cursor: pointer;
+  }
+
+  .sp-range:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .sp-pixel {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
 }
