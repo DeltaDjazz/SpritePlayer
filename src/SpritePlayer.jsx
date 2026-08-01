@@ -159,6 +159,39 @@ function IconSpeed() {
   );
 }
 
+function IconFlipX() {
+  return (
+    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3v18"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeDasharray="2.5 2.5"
+      />
+      <path
+        d="M8 8H5.5A1.5 1.5 0 0 0 4 9.5v5A1.5 1.5 0 0 0 5.5 16H8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 8h2.5A1.5 1.5 0 0 1 20 9.5v5a1.5 1.5 0 0 1-1.5 1.5H16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 12H3m5 0-2-2m2 2-2 2M16 12h5m-5 0 2-2m-2 2 2 2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function SectionTitle({ icon, children }) {
   return (
     <div className="mb-4">
@@ -207,6 +240,7 @@ export default function SpritePlayer() {
   const [emptyFrameUseBgColor, setEmptyFrameUseBgColor] = useState(false);
   const [emptyFrameBgColor, setEmptyFrameBgColor] = useState('#000000');
   const [framesPerImageOverrides, setFramesPerImageOverrides] = useState({});
+  const [flipX, setFlipX] = useState(false);
   const [error, setError] = useState('');
   const dragCounterRef = useRef(0);
   const fileInputRef = useRef(null);
@@ -222,6 +256,7 @@ export default function SpritePlayer() {
     setFrameIndex(0);
     setIsPaused(false);
     setFramesPerImageOverrides({});
+    setFlipX(false);
     setEmptyFrameUseBgColor(false);
     setEmptyFrameBgColor('#000000');
     setNaturalSize({ w: 0, h: 0 });
@@ -433,6 +468,10 @@ export default function SpritePlayer() {
     setIsPaused(true);
   }, []);
 
+  const toggleFlipX = useCallback(() => {
+    setFlipX((prev) => !prev);
+  }, []);
+
   const overrideEntries = useMemo(() => {
     if (!config) return [];
     return Object.entries(framesPerImageOverrides)
@@ -524,6 +563,11 @@ export default function SpritePlayer() {
     }
   }, []);
 
+  const flipTransformStyle = useMemo(
+    () => (flipX ? { transform: 'scaleX(-1)' } : undefined),
+    [flipX]
+  );
+
   const previewStyle = useMemo(() => {
     if (!imageSrc || !config || isEmptyFrame) return undefined;
     return {
@@ -532,8 +576,17 @@ export default function SpritePlayer() {
       backgroundSize: `${config.fullW}px ${config.fullH}px`,
       backgroundPosition,
       backgroundRepeat: 'no-repeat',
+      ...flipTransformStyle,
     };
-  }, [imageSrc, config, isEmptyFrame, frameBoxStyle, backgroundPosition]);
+  }, [imageSrc, config, isEmptyFrame, frameBoxStyle, backgroundPosition, flipTransformStyle]);
+
+  const emptyFramePreviewStyle = useMemo(() => {
+    if (!emptyFrameStyle) return undefined;
+    return {
+      ...emptyFrameStyle,
+      ...flipTransformStyle,
+    };
+  }, [emptyFrameStyle, flipTransformStyle]);
 
   return (
     <div
@@ -605,9 +658,26 @@ export default function SpritePlayer() {
             </label>
           </div>
 
-          <button type="button" className={cx(btnPrimary, 'w-full sm:w-auto')} onClick={handleValidate}>
-            Valider &amp; Lancer
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className={cx(btnPrimary, 'w-full sm:w-auto')} onClick={handleValidate}>
+              Valider &amp; Lancer
+            </button>
+            <button
+              type="button"
+              className={cx(
+                btnSecondary,
+                flipX && 'border-primary bg-muted text-primary'
+              )}
+              onClick={toggleFlipX}
+              disabled={!imageSrc}
+              aria-pressed={flipX}
+              title="Inverser horizontalement (scaleX -1)"
+              aria-label="Inverser horizontalement"
+            >
+              <IconFlipX />
+              Flip X
+            </button>
+          </div>
         </section>
 
         <section className="sp-panel p-5 sm:p-6">
@@ -751,7 +821,7 @@ export default function SpritePlayer() {
             isEmptyFrame ? (
               <div
                 className="sp-pixel shrink-0"
-                style={emptyFrameStyle}
+                style={emptyFramePreviewStyle}
                 aria-label="Image vide"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -768,6 +838,7 @@ export default function SpritePlayer() {
                 src={imageSrc}
                 alt="Feuille de sprites importée"
                 className="sp-pixel max-h-[min(360px,50vh)] max-w-full object-contain"
+                style={flipTransformStyle}
                 onClick={(e) => e.stopPropagation()}
               />
               <p className="absolute inset-x-4 bottom-10 m-0 rounded-lg px-3 py-2 text-center text-sm text-foreground/90 [background:#3d3d3d85]">
