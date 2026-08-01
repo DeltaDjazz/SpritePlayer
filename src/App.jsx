@@ -5,7 +5,7 @@ import SpritePlayer from './SpritePlayer';
  */
 export default function App() {
   return (
-    <main>
+    <main className="min-h-screen">
       <SpritePlayer />
     </main>
   );
