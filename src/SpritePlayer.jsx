@@ -176,7 +176,7 @@ const btnBase =
 
 const btnPrimary = cx(
   btnBase,
-  'border-transparent bg-[linear-gradient(135deg,#fbbd2e_0%,#f59e0b_48%,#ea580c_100%)] text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-105'
+  'border-transparent bg-[linear-gradient(135deg,#fbbd2e_0%,#ffcb00_48%,#ea9f0e_100%)] text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-105'
 );
 
 const btnSecondary = cx(
