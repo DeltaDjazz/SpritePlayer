@@ -731,7 +731,7 @@ export default function SpritePlayer() {
                 className="sp-pixel max-h-[min(360px,50vh)] max-w-full object-contain"
                 onClick={(e) => e.stopPropagation()}
               />
-              <p className="absolute inset-x-4 bottom-10 m-0 text-center text-sm text-foreground/90">
+              <p className="absolute inset-x-4 bottom-10 m-0 rounded-lg px-3 py-2 text-center text-sm text-foreground/90 [background:#3d3d3d85]">
                 Configurez les frames puis cliquez sur « Valider & Lancer ».
                 <span className="mt-1 block text-xs text-muted-foreground">
                   Glissez une autre image pour remplacer
