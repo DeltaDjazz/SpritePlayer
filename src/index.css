@@ -9,28 +9,26 @@
 
   --color-background: hsl(222 70% 5%);
   --color-foreground: hsl(200 20% 96%);
-  --color-card: hsl(220 45% 10% / 0.72);
+  --color-card: rgb(15 23 42 / 0.72);
   --color-card-foreground: hsl(200 20% 96%);
   --color-primary: hsl(42 98% 55%);
   --color-primary-foreground: hsl(222 60% 5%);
   --color-primary-hover: hsl(38 96% 48%);
-  --color-muted: hsl(217 35% 14%);
+  --color-muted: hsl(217 28% 16%);
   --color-muted-foreground: hsl(215 16% 68%);
-  --color-border: hsl(42 40% 40% / 0.28);
-  --color-input: hsl(217 35% 14% / 0.9);
+  --color-border: rgb(255 255 255 / 0.1);
+  --color-input: rgb(15 23 42 / 0.85);
   --color-ring: hsl(42 98% 55%);
   --color-danger: hsl(0 84% 60%);
-  --color-preview: hsl(222 50% 7%);
-  --color-timeline: hsl(220 42% 10% / 0.92);
-  --color-transport: hsl(220 40% 9% / 0.95);
+  --color-preview: hsl(222 45% 8%);
+  --color-timeline: rgb(15 23 42 / 0.88);
+  --color-transport: rgb(15 23 42 / 0.92);
 
-  --radius-xl: 0.875rem;
+  --radius-xl: 1.5rem;
   --shadow-card:
-    0 1px 0 hsl(42 95% 70% / 0.12) inset,
-    0 0 0 1px hsl(42 80% 55% / 0.08),
-    0 10px 28px -12px hsl(222 80% 2% / 0.85),
-    0 28px 60px -24px hsl(222 90% 2% / 0.75),
-    0 0 48px -18px hsl(42 98% 55% / 0.22);
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 18px 48px -20px rgb(0 0 0 / 0.65),
+    0 8px 24px -12px rgb(0 0 0 / 0.45);
   --shadow-glow: 0 0 40px hsl(42 98% 55% / 0.28);
 }
 
@@ -52,17 +50,16 @@
     font-family: var(--font-sans);
     color: var(--color-foreground);
     background-color: var(--color-background);
-    /* Flash jaune/ambre → sombre profond */
     background-image:
-      radial-gradient(ellipse 90% 55% at 12% -5%, hsl(48 100% 58% / 0.55) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 50% at 95% 8%, hsl(28 100% 52% / 0.38) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 40% at 50% 100%, hsl(42 90% 40% / 0.16) 0%, transparent 55%),
+      radial-gradient(ellipse 90% 55% at 12% -5%, hsla(306.3, 77.3%, 58.6%, 0.55) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 50% at 95% 8%, hsla(0, 0%, 0.8%, 0.32) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, hsl(42 90% 40% / 0.16) 0%, #3b4561ba 55%),
       linear-gradient(
         165deg,
         hsl(42 95% 42% / 0.28) 0%,
         hsl(222 55% 12%) 28%,
         hsl(222 70% 6%) 62%,
-        hsl(228 75% 4%) 100%
+        hsl(250.5, 97.7%, 17.3%) 100%
       );
     background-attachment: fixed;
     text-rendering: optimizeLegibility;
@@ -71,15 +68,17 @@
 }
 
 @layer components {
+  /* Panels type glass / modal (réf. image jointe) */
   .sp-panel {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    background:
-      linear-gradient(180deg, hsl(220 40% 16% / 0.55) 0%, hsl(220 50% 8% / 0.78) 100%),
-      hsl(220 45% 10% / 0.65);
-    box-shadow: var(--shadow-card);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 1.5rem;
+    background: rgb(15 23 42 / 0.72);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.06) inset,
+      0 18px 48px -20px rgb(0 0 0 / 0.65),
+      0 8px 24px -12px rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .sp-range {

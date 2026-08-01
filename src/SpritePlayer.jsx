@@ -499,9 +499,6 @@ export default function SpritePlayer() {
       aria-label="Lecteur de sprite sheet"
     >
       <header className="mb-6">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          Sprite tools
-        </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           SpritePlayer
         </h1>
@@ -520,7 +517,7 @@ export default function SpritePlayer() {
       )}
 
       <div className="mb-4 grid gap-4 md:grid-cols-2">
-        <section className="sp-panel p-4">
+        <section className="sp-panel p-5 sm:p-6">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Feuille de sprites
           </h2>
@@ -572,7 +569,7 @@ export default function SpritePlayer() {
           </button>
         </section>
 
-        <section className="sp-panel p-4">
+        <section className="sp-panel p-5 sm:p-6">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Vitesse
           </h2>
@@ -955,7 +952,7 @@ export default function SpritePlayer() {
 
       {config && overrideEntries.length > 0 && (
         <section
-          className="sp-panel p-4"
+          className="sp-panel p-5 sm:p-6"
           aria-label="Surcharges de Frame Time"
         >
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-[0.14em] text-primary">
