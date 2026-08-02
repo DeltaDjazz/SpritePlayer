@@ -509,6 +509,33 @@ export default function SpritePlayer() {
   ]);
 
   useEffect(() => {
+    if (!config || !isPaused) return;
+
+    const onKeyDown = (e) => {
+      const tag = e.target?.tagName;
+      if (
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        e.target?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goPrevFrame();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goNextFrame();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [config, isPaused, goPrevFrame, goNextFrame]);
+
+  useEffect(() => {
     if (!config) return;
     timelineActiveTickRef.current?.scrollIntoView({
       behavior: 'smooth',
