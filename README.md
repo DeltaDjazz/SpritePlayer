@@ -1,6 +1,6 @@
 # SpritePlayer
 
-🌐 **Site déployé :** [https://deltadjazz.github.io/SpritePlayer/](https://deltadjazz.github.io/SpritePlayer/)
+🌐 **Site déployé :** [https://sailan_obii.github.io/SpritePlayer/](https://sailan-obii.github.io/SpritePlayer/)
 
 Petit outil web pour prévisualiser une **sprite sheet** (PNG ou JPEG) en **boucle**, comme un GIF animé. Tout s’exécute **dans le navigateur** : aucun serveur ni upload de fichiers n’est requis.
 
